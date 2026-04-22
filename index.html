@@ -249,7 +249,7 @@
     <div class="setup-note" style="margin-top:10px">🎲 X and O are randomly assigned at the start</div>
   </div>
 
-  <!-- Online: just room code, no opponent name needed -->
+  <!-- Online: just room code -->
   <div style="width:100%;display:none" id="onlineFields">
     <div class="setup-label">Room Code</div>
     <div class="room-row">
@@ -392,7 +392,7 @@ function startLocal() {
 
 /* ── Online ── */
 function startOnline() {
-  if (ABLY_KEY === 'aLl_4g.AUzRyw:sgdMTG4ulgy85BndZ3MF8Sx8io3ftI62MM7N2m6TGFk') { showToast('Paste your Ably API key in the code!'); return; }
+  if (ABLY_KEY === 'YOUR_ABLY_API_KEY_HERE') { showToast('Paste your Ably API key in the code!'); return; }
   const myName = document.getElementById('myName').value.trim() || 'Player';
   const room   = document.getElementById('roomCode').value.trim().toUpperCase();
   if (!room) { showToast('Enter a room code first!'); return; }
