@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tic Tac Toe</title>
+<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -30,6 +31,21 @@
     font-size:1rem; outline:none; transition:border-color .2s; margin-top:6px;
   }
   .setup-input:focus { border-color:#a78bfa; }
+  .mode-btns { display:flex; gap:10px; width:100%; }
+  .mode-btn {
+    flex:1; padding:12px; border-radius:12px; border:2px solid #2a2a40;
+    background:#13131f; color:#fff; font-size:.9rem; font-weight:700;
+    cursor:pointer; transition:all .2s; letter-spacing:1px;
+  }
+  .mode-btn.active { border-color:#a78bfa; background:#2e1f4e; color:#a78bfa; }
+  .room-row { display:flex; gap:8px; width:100%; margin-top:6px; }
+  .room-row .setup-input { margin-top:0; }
+  .dice-btn {
+    padding:0 16px; background:#13131f; border:2px solid #2a2a40;
+    border-radius:12px; color:#fff; font-size:1.1rem; cursor:pointer;
+    transition:border-color .2s; flex-shrink:0;
+  }
+  .dice-btn:hover { border-color:#a78bfa; }
   .start-btn {
     width:100%; padding:14px; border:none; border-radius:50px;
     background:linear-gradient(135deg,#a78bfa,#60a5fa);
@@ -39,6 +55,31 @@
   .start-btn:hover { opacity:.88; transform:scale(1.03); }
   .setup-note { font-size:.75rem; color:#4a4a6a; text-align:center; line-height:1.5; }
 
+  /* ── Waiting ── */
+  #waitingScreen {
+    display:none; flex-direction:column; align-items:center; gap:20px;
+    padding:40px 28px; background:#1e1e30; border-radius:24px;
+    width:100%; max-width:380px; border:2px solid #2a2a40; text-align:center;
+  }
+  .waiting-spinner {
+    width:52px; height:52px; border:4px solid #2a2a40;
+    border-top-color:#a78bfa; border-radius:50%; animation:spin 1s linear infinite;
+  }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .waiting-title { font-size:1.1rem; font-weight:700; letter-spacing:1px; }
+  .waiting-code {
+    background:#13131f; border:2px solid #2a2a40; border-radius:14px;
+    padding:14px 24px; font-size:1.6rem; font-weight:900; letter-spacing:6px; color:#a78bfa;
+  }
+  .waiting-hint { font-size:.8rem; color:#94a3b8; line-height:1.6; }
+  .copy-btn {
+    padding:10px 24px; background:#13131f; border:2px solid #2a2a40;
+    border-radius:50px; color:#a78bfa; font-size:.85rem; font-weight:700;
+    letter-spacing:1px; cursor:pointer; transition:all .2s;
+  }
+  .copy-btn:hover { border-color:#a78bfa; }
+  .cancel-btn { padding:8px 20px; background:none; border:none; color:#4a4a6a; font-size:.8rem; cursor:pointer; text-decoration:underline; }
+
   /* ── Game ── */
   #gameScreen { display:none; flex-direction:column; align-items:center; gap:16px; padding:24px 16px; width:100%; max-width:420px; }
   h1 {
@@ -46,6 +87,13 @@
     background:linear-gradient(135deg,#a78bfa,#60a5fa);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-transform:uppercase;
   }
+  .online-pill {
+    font-size:.7rem; letter-spacing:1.5px; text-transform:uppercase;
+    background:#1e1e30; border:1.5px solid #2a2a40; border-radius:99px;
+    padding:4px 14px; color:#94a3b8; display:none; align-items:center; gap:6px;
+  }
+  .online-pill .dot { width:7px; height:7px; border-radius:50%; background:#4ade80; animation:dotPulse 1.5s ease infinite; }
+  @keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
   /* Timer */
   .timer-wrap { width:100%; }
@@ -66,8 +114,7 @@
   .score-card.active-o { border-color:#60a5fa; box-shadow:0 0 16px #60a5fa44; }
   .score-card .p-name { font-size:.6rem; letter-spacing:1px; opacity:.55; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .score-card .p-sym { font-size:1.3rem; font-weight:900; }
-  .score-card.x .p-sym { color:#a78bfa; }
-  .score-card.o .p-sym { color:#60a5fa; }
+  .score-card.x .p-sym { color:#a78bfa; } .score-card.o .p-sym { color:#60a5fa; }
   .score-card .p-score { font-size:1.3rem; font-weight:700; }
   .score-draw { flex:.6; background:#1e1e30; border-radius:14px; padding:12px 8px; text-align:center; }
   .score-draw .p-name { font-size:.6rem; letter-spacing:1px; opacity:.55; text-transform:uppercase; }
@@ -123,7 +170,7 @@
   }
   .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* Symbol reveal overlay */
+  /* Reveal */
   #revealOverlay {
     display:none; position:fixed; inset:0; background:rgba(0,0,0,.8);
     z-index:200; align-items:center; justify-content:center;
@@ -138,7 +185,7 @@
   .reveal-title { font-size:.7rem; letter-spacing:3px; text-transform:uppercase; color:#94a3b8; margin-bottom:18px; }
   .reveal-row { display:flex; justify-content:center; gap:24px; margin-bottom:20px; }
   .reveal-player { display:flex; flex-direction:column; align-items:center; gap:6px; }
-  .reveal-name { font-size:.8rem; opacity:.6; }
+  .reveal-name { font-size:.85rem; font-weight:600; }
   .reveal-sym { font-size:3rem; font-weight:900; }
   .reveal-sym.x { color:#a78bfa; } .reveal-sym.o { color:#60a5fa; }
   .reveal-vs { font-size:1rem; font-weight:800; opacity:.3; align-self:center; }
@@ -158,19 +205,19 @@
 <button class="sound-btn" id="soundBtn">🔊</button>
 <div class="toast" id="toast"></div>
 
-<!-- Symbol Reveal -->
+<!-- Reveal -->
 <div id="revealOverlay">
   <div class="reveal-box">
     <div class="reveal-title">✨ Symbols Assigned!</div>
     <div class="reveal-row">
       <div class="reveal-player">
-        <div class="reveal-name" id="revealName1"></div>
-        <div class="reveal-sym x" id="revealSym1"></div>
+        <div class="reveal-name" id="revealNameX"></div>
+        <div class="reveal-sym x">X</div>
       </div>
       <div class="reveal-vs">VS</div>
       <div class="reveal-player">
-        <div class="reveal-name" id="revealName2"></div>
-        <div class="reveal-sym o" id="revealSym2"></div>
+        <div class="reveal-name" id="revealNameO"></div>
+        <div class="reveal-sym o">O</div>
       </div>
     </div>
     <div class="reveal-sub"><span id="revealFirst"></span> goes first!</div>
@@ -181,28 +228,61 @@
 <!-- Setup -->
 <div id="setupScreen">
   <h1>Tic Tac Toe</h1>
+
   <div style="width:100%">
-    <div class="setup-label">Player 1 Name</div>
-    <input class="setup-input" id="name1" placeholder="e.g. Alice" maxlength="14">
+    <div class="setup-label">Your Name</div>
+    <input class="setup-input" id="myName" placeholder="e.g. Alice" maxlength="14">
   </div>
+
   <div style="width:100%">
+    <div class="setup-label">Mode</div>
+    <div class="mode-btns" style="margin-top:8px">
+      <button class="mode-btn active" id="modeLocal">🖥 Local</button>
+      <button class="mode-btn" id="modeOnline">🌐 Online</button>
+    </div>
+  </div>
+
+  <!-- Local: second player name -->
+  <div style="width:100%" id="localFields">
     <div class="setup-label">Player 2 Name</div>
     <input class="setup-input" id="name2" placeholder="e.g. Bob" maxlength="14">
+    <div class="setup-note" style="margin-top:10px">🎲 X and O are randomly assigned at the start</div>
   </div>
-  <div class="setup-note">🎲 X and O will be randomly assigned when the game starts</div>
+
+  <!-- Online: just room code, no opponent name needed -->
+  <div style="width:100%;display:none" id="onlineFields">
+    <div class="setup-label">Room Code</div>
+    <div class="room-row">
+      <input class="setup-input" id="roomCode" placeholder="e.g. TIGER" maxlength="8" style="text-transform:uppercase;letter-spacing:3px">
+      <button class="dice-btn" id="genRoom">🎲</button>
+    </div>
+    <div class="setup-note" style="margin-top:10px">Create a code or enter your friend's code to join. Each player only enters their own name.</div>
+  </div>
+
   <button class="start-btn" id="startBtn">Start Game</button>
+</div>
+
+<!-- Waiting -->
+<div id="waitingScreen">
+  <div class="waiting-spinner"></div>
+  <div class="waiting-title">Waiting for opponent…</div>
+  <div class="waiting-code" id="waitingCode"></div>
+  <div class="waiting-hint">Share this code with your friend.<br>They open the game, enter their <strong>own name</strong> + this code, and join.</div>
+  <button class="copy-btn" id="copyCodeBtn">📋 Copy Code</button>
+  <button class="cancel-btn" id="cancelWaitBtn">Cancel</button>
 </div>
 
 <!-- Game -->
 <div id="gameScreen">
   <h1>Tic Tac Toe</h1>
+  <div class="online-pill" id="onlinePill"><span class="dot"></span>Online · <span id="pillRoom"></span></div>
   <div class="timer-wrap">
     <div class="timer-bar-bg"><div class="timer-bar" id="timerBar"></div></div>
     <div class="timer-label" id="timerLabel">45s</div>
   </div>
   <div class="scoreboard">
     <div class="score-card x active-x" id="cardX">
-      <div class="p-name" id="labelX">Player X</div>
+      <div class="p-name" id="labelX">X</div>
       <div class="p-sym">X</div>
       <div class="p-score" id="scoreX">0</div>
     </div>
@@ -211,7 +291,7 @@
       <div class="p-score" id="scoreDraw">0</div>
     </div>
     <div class="score-card o" id="cardO">
-      <div class="p-name" id="labelO">Player O</div>
+      <div class="p-name" id="labelO">O</div>
       <div class="p-sym">O</div>
       <div class="p-score" id="scoreO">0</div>
     </div>
@@ -225,11 +305,19 @@
 </div>
 
 <script>
+/* ── PASTE YOUR ABLY ROOT API KEY HERE ── */
+const ABLY_KEY = 'nkVrsg.nijTYA:NwXEzW28sPl_aGxjK2kFn9lIsHp23LIKeCl09QzRWlY';
+/* ─────────────────────────────────────── */
+
 const TIMER_MAX = 45;
 const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-let g = {}, timerInterval = null, soundOn = true;
 
-/* Audio */
+let g = {}, timerInterval = null, soundOn = true;
+let gameMode = 'local';
+let mySymbol = null;
+let ablyClient = null, ablyChannel = null;
+
+/* ── Audio ── */
 const actx = new (window.AudioContext || window.webkitAudioContext)();
 function tone(freq, type='sine', dur=0.12, vol=0.22) {
   if (!soundOn) return;
@@ -250,65 +338,136 @@ const sfx = {
   timeout: () => { tone(200,'sawtooth',.2,.2); setTimeout(()=>tone(160,'sawtooth',.25,.15),200); }
 };
 
-/* DOM */
-const setupScreen  = document.getElementById('setupScreen');
-const gameScreen   = document.getElementById('gameScreen');
-const boardEl      = document.getElementById('board');
-const statusEl     = document.getElementById('status');
-const timerBar     = document.getElementById('timerBar');
-const timerLabel   = document.getElementById('timerLabel');
-const scoreXEl     = document.getElementById('scoreX');
-const scoreOEl     = document.getElementById('scoreO');
-const scoreDrawEl  = document.getElementById('scoreDraw');
-const cardX        = document.getElementById('cardX');
-const cardO        = document.getElementById('cardO');
-const labelX       = document.getElementById('labelX');
-const labelO       = document.getElementById('labelO');
-const toastEl      = document.getElementById('toast');
-const revealOverlay= document.getElementById('revealOverlay');
+/* ── DOM ── */
+const setupScreen   = document.getElementById('setupScreen');
+const waitingScreen = document.getElementById('waitingScreen');
+const gameScreen    = document.getElementById('gameScreen');
+const boardEl       = document.getElementById('board');
+const statusEl      = document.getElementById('status');
+const timerBar      = document.getElementById('timerBar');
+const timerLabel    = document.getElementById('timerLabel');
+const scoreXEl      = document.getElementById('scoreX');
+const scoreOEl      = document.getElementById('scoreO');
+const scoreDrawEl   = document.getElementById('scoreDraw');
+const cardX         = document.getElementById('cardX');
+const cardO         = document.getElementById('cardO');
+const labelX        = document.getElementById('labelX');
+const labelO        = document.getElementById('labelO');
+const toastEl       = document.getElementById('toast');
+const onlinePill    = document.getElementById('onlinePill');
+const revealOverlay = document.getElementById('revealOverlay');
 
-document.getElementById('startBtn').addEventListener('click', startGame);
-document.getElementById('restartBtn').addEventListener('click', () => restart());
-document.getElementById('menuBtn').addEventListener('click', goMenu);
-document.getElementById('soundBtn').addEventListener('click', () => {
-  soundOn = !soundOn;
-  document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+/* ── Mode toggle ── */
+document.getElementById('modeLocal').addEventListener('click', () => {
+  gameMode = 'local';
+  document.getElementById('modeLocal').classList.add('active');
+  document.getElementById('modeOnline').classList.remove('active');
+  document.getElementById('localFields').style.display = 'block';
+  document.getElementById('onlineFields').style.display = 'none';
 });
-document.getElementById('revealPlayBtn').addEventListener('click', () => {
-  revealOverlay.classList.remove('show');
-  buildBoard(); render(); turnStatus(); startTimer();
+document.getElementById('modeOnline').addEventListener('click', () => {
+  gameMode = 'online';
+  document.getElementById('modeOnline').classList.add('active');
+  document.getElementById('modeLocal').classList.remove('active');
+  document.getElementById('localFields').style.display = 'none';
+  document.getElementById('onlineFields').style.display = 'block';
+});
+document.getElementById('genRoom').addEventListener('click', () => {
+  document.getElementById('roomCode').value = Math.random().toString(36).slice(2,6).toUpperCase();
 });
 
-/* Start */
-function startGame() {
-  const n1 = document.getElementById('name1').value.trim() || 'Player 1';
+/* ── Start ── */
+document.getElementById('startBtn').addEventListener('click', () => {
+  if (actx.state === 'suspended') actx.resume();
+  gameMode === 'local' ? startLocal() : startOnline();
+});
+
+/* ── Local ── */
+function startLocal() {
+  const n1 = document.getElementById('myName').value.trim() || 'Player 1';
   const n2 = document.getElementById('name2').value.trim() || 'Player 2';
-
-  // Randomly assign X / O
-  const xIsP1 = Math.random() < 0.5;
-  const names  = { X: xIsP1 ? n1 : n2, O: xIsP1 ? n2 : n1 };
-
-  g = {
-    board: Array(9).fill(''), current: 'X', gameOver: false,
-    scores: { X:0, O:0, draw:0 }, names, history: [], timeLeft: TIMER_MAX
-  };
-
-  labelX.textContent = names.X;
-  labelO.textContent = names.O;
-
-  setupScreen.style.display = 'none';
-  gameScreen.style.display  = 'flex';
-
-  // Show reveal
-  document.getElementById('revealName1').textContent = names.X;
-  document.getElementById('revealSym1').textContent  = 'X';
-  document.getElementById('revealName2').textContent = names.O;
-  document.getElementById('revealSym2').textContent  = 'O';
-  document.getElementById('revealFirst').textContent = names.X;
-  revealOverlay.classList.add('show');
+  const xFirst = Math.random() < .5;
+  launchGame({ X: xFirst ? n1 : n2, O: xFirst ? n2 : n1 }, false);
 }
 
-/* Timer */
+/* ── Online ── */
+function startOnline() {
+  if (ABLY_KEY === 'nkVrsg.nijTYA:NwXEzW28sPl_aGxjK2kFn9lIsHp23LIKeCl09QzRWlY') { showToast('Paste your Ably API key in the code!'); return; }
+  const myName = document.getElementById('myName').value.trim() || 'Player';
+  const room   = document.getElementById('roomCode').value.trim().toUpperCase();
+  if (!room) { showToast('Enter a room code first!'); return; }
+
+  show('waiting');
+  document.getElementById('waitingCode').textContent = room;
+  document.getElementById('pillRoom').textContent = room;
+
+  if (ablyClient) ablyClient.close();
+  ablyClient  = new Ably.Realtime({ key: ABLY_KEY });
+  ablyChannel = ablyClient.channels.get('ttt-' + room);
+
+  // Listen for game start (host publishes names after both players connect)
+  ablyChannel.subscribe('start', msg => {
+    const { names, hostId } = msg.data;
+    mySymbol = (ablyClient.auth.clientId === hostId) ? 'X' : 'O';
+    onlinePill.style.display = 'flex';
+    launchGame(names, true);
+  });
+
+  ablyChannel.subscribe('move', msg => {
+    if (msg.data.sym !== mySymbol) onRemoteMove(msg.data.index);
+  });
+
+  ablyChannel.subscribe('restart', () => doRestart(false));
+
+  // Presence: detect when 2 players are in room
+  ablyChannel.presence.subscribe('enter', () => {
+    ablyChannel.presence.get((err, members) => {
+      if (err || !members || members.length !== 2) return;
+      const sorted = members.sort((a, b) => a.timestamp - b.timestamp);
+      const amHost = sorted[0].clientId === ablyClient.auth.clientId;
+
+      if (amHost) {
+        // Host randomly assigns X/O between the two players
+        const xFirst = Math.random() < .5;
+        const names = {
+          X: xFirst ? sorted[0].data : sorted[1].data,
+          O: xFirst ? sorted[1].data : sorted[0].data
+        };
+        ablyChannel.publish('start', { names, hostId: sorted[0].clientId });
+      }
+    });
+  });
+
+  ablyChannel.presence.enter(myName);
+}
+
+function onRemoteMove(i) {
+  if (g.gameOver || g.board[i]) return;
+  applyMove(i);
+}
+
+/* ── Launch game ── */
+function launchGame(names, isOnline) {
+  g = {
+    board: Array(9).fill(''), current: 'X', gameOver: false,
+    scores: {X:0,O:0,draw:0}, names, history: [], timeLeft: TIMER_MAX, isOnline
+  };
+  labelX.textContent = names.X;
+  labelO.textContent = names.O;
+  document.getElementById('revealNameX').textContent = names.X;
+  document.getElementById('revealNameO').textContent = names.O;
+  document.getElementById('revealFirst').textContent = names.X;
+  revealOverlay.classList.add('show');
+  show('game');
+  buildBoard(); render();
+}
+
+document.getElementById('revealPlayBtn').addEventListener('click', () => {
+  revealOverlay.classList.remove('show');
+  turnStatus(); startTimer();
+});
+
+/* ── Timer ── */
 function startTimer() {
   clearInterval(timerInterval);
   g.timeLeft = TIMER_MAX; updateTimerUI();
@@ -337,7 +496,7 @@ function onTimeout() {
   sfx.timeout();
 }
 
-/* Board */
+/* ── Board ── */
 function buildBoard() {
   boardEl.innerHTML = '';
   for (let i = 0; i < 9; i++) {
@@ -348,19 +507,22 @@ function buildBoard() {
   }
 }
 
-/* Move */
+/* ── Move ── */
 function onCellClick(e) {
   if (actx.state === 'suspended') actx.resume();
   const i = +e.currentTarget.dataset.i;
   if (g.gameOver || g.board[i]) return;
+  if (g.isOnline && g.current !== mySymbol) { showToast("Wait for your turn!"); return; }
+  if (g.isOnline) ablyChannel.publish('move', { index: i, sym: mySymbol });
   applyMove(i);
 }
+
 function applyMove(i) {
   g.board[i] = g.current;
-  g.history.push({ index:i, sym:g.current });
+  g.history.push({ index: i, sym: g.current });
   const cells = boardEl.querySelectorAll('.cell');
   cells[i].classList.add('pop');
-  cells[i].addEventListener('animationend', () => cells[i].classList.remove('pop'), { once:true });
+  cells[i].addEventListener('animationend', () => cells[i].classList.remove('pop'), { once: true });
   sfx.move();
   const result = checkWinner(g.board);
   if (result) {
@@ -382,7 +544,7 @@ function applyMove(i) {
   }
 }
 
-/* Undo last 2 on draw */
+/* ── Undo on draw ── */
 function undoLastTwo() {
   if (g.history.length < 2) { resumeAfterDraw(); return; }
   const cells = boardEl.querySelectorAll('.cell');
@@ -395,7 +557,7 @@ function undoLastTwo() {
       g.board[index] = '';
       cell.classList.remove('undo-out');
       if (++done === 2) resumeAfterDraw();
-    }, { once:true });
+    }, { once: true });
   });
   sfx.undo();
 }
@@ -404,18 +566,18 @@ function resumeAfterDraw() {
   showToast('Board rewound — keep playing!');
 }
 
-/* Win check */
+/* ── Win check ── */
 function checkWinner(board) {
   for (const line of WIN_LINES) {
     const [a,b,c] = line;
     if (board[a] && board[a] === board[b] && board[a] === board[c])
-      return { winner:board[a], line };
+      return { winner: board[a], line };
   }
-  if (board.every(v => v)) return { draw:true };
+  if (board.every(v => v)) return { draw: true };
   return null;
 }
 
-/* Render */
+/* ── Render ── */
 function render(winLine = null) {
   const cells = boardEl.querySelectorAll('.cell');
   cells.forEach((cell, i) => {
@@ -438,30 +600,65 @@ function turnStatus() {
   statusEl.innerHTML = `<span class="${cls}">${g.names[g.current]}</span>'s turn`;
 }
 
-/* Restart / Menu */
-function restart() {
-  stopTimer();
-  // Re-randomise symbols on each restart
-  const n1 = g.names.X, n2 = g.names.O;
-  const xIsP1 = Math.random() < 0.5;
-  g.names  = { X: xIsP1 ? n1 : n2, O: xIsP1 ? n2 : n1 };
-  g.board  = Array(9).fill(''); g.current = 'X'; g.gameOver = false; g.history = [];
-  labelX.textContent = g.names.X; labelO.textContent = g.names.O;
+/* ── Restart ── */
+document.getElementById('restartBtn').addEventListener('click', () => {
+  if (g.isOnline) ablyChannel.publish('restart', {});
+  doRestart(true);
+});
 
-  document.getElementById('revealName1').textContent = g.names.X;
-  document.getElementById('revealSym1').textContent  = 'X';
-  document.getElementById('revealName2').textContent = g.names.O;
-  document.getElementById('revealSym2').textContent  = 'O';
-  document.getElementById('revealFirst').textContent = g.names.X;
-  revealOverlay.classList.add('show');
-}
-function goMenu() {
+function doRestart(reshuffleLocal) {
   stopTimer();
-  gameScreen.style.display  = 'none';
-  setupScreen.style.display = 'flex';
+  if (!g.isOnline && reshuffleLocal) {
+    // Re-randomise symbols for local mode
+    const {X, O} = g.names;
+    const swap = Math.random() < .5;
+    g.names = swap ? {X:O, O:X} : {X, O};
+    labelX.textContent = g.names.X;
+    labelO.textContent = g.names.O;
+    document.getElementById('revealNameX').textContent = g.names.X;
+    document.getElementById('revealNameO').textContent = g.names.O;
+    document.getElementById('revealFirst').textContent = g.names.X;
+    revealOverlay.classList.add('show');
+  }
+  g.board = Array(9).fill(''); g.current = 'X'; g.gameOver = false; g.history = [];
+  buildBoard(); render();
+  if (!revealOverlay.classList.contains('show')) { turnStatus(); startTimer(); }
 }
 
-/* Toast */
+/* ── Menu ── */
+document.getElementById('menuBtn').addEventListener('click', () => {
+  stopTimer();
+  if (ablyChannel) ablyChannel.presence.leave();
+  if (ablyClient)  ablyClient.close();
+  onlinePill.style.display = 'none';
+  show('setup');
+});
+
+/* ── Cancel waiting ── */
+document.getElementById('cancelWaitBtn').addEventListener('click', () => {
+  if (ablyChannel) ablyChannel.presence.leave();
+  if (ablyClient)  ablyClient.close();
+  show('setup');
+});
+
+document.getElementById('copyCodeBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(document.getElementById('waitingCode').textContent)
+    .then(() => showToast('Code copied!'));
+});
+
+document.getElementById('soundBtn').addEventListener('click', () => {
+  soundOn = !soundOn;
+  document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+});
+
+/* ── Screen helper ── */
+function show(s) {
+  setupScreen.style.display   = s === 'setup'   ? 'flex' : 'none';
+  waitingScreen.style.display = s === 'waiting' ? 'flex' : 'none';
+  gameScreen.style.display    = s === 'game'    ? 'flex' : 'none';
+}
+
+/* ── Toast ── */
 let toastTimer;
 function showToast(msg) {
   toastEl.textContent = msg;
