@@ -420,14 +420,14 @@ function startOnline() {
   ablyChannel.subscribe('restart', () => doRestart(false));
 
   // Presence: detect when 2 players are in room
-  ablyChannel.presence.subscribe('enter', () => {
+  // Check presence both on 'enter' events AND immediately after joining
+  // This fixes the race condition where one player misses the other's enter event
+  function checkPresence() {
     ablyChannel.presence.get((err, members) => {
       if (err || !members || members.length !== 2) return;
       const sorted = members.sort((a, b) => a.timestamp - b.timestamp);
       const amHost = sorted[0].clientId === ablyClient.auth.clientId;
-
       if (amHost) {
-        // Host randomly assigns X/O between the two players
         const xFirst = Math.random() < .5;
         const names = {
           X: xFirst ? sorted[0].data : sorted[1].data,
@@ -436,9 +436,15 @@ function startOnline() {
         ablyChannel.publish('start', { names, hostId: sorted[0].clientId });
       }
     });
+  }
+
+  ablyChannel.presence.subscribe('enter', checkPresence);
+  ablyChannel.presence.subscribe('leave', () => {
+    if (g.gameOver !== undefined) showToast('Opponent disconnected!');
   });
 
-  ablyChannel.presence.enter(myName);
+  // Enter presence, then immediately check if opponent is already there
+  ablyChannel.presence.enter(myName, () => checkPresence());
 }
 
 function onRemoteMove(i) {
