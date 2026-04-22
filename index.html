@@ -4,110 +4,61 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tic Tac Toe</title>
-<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: #0f0f1a; font-family: 'Segoe UI', system-ui, sans-serif; color: #fff;
-  }
+  body { min-height:100vh; display:flex; align-items:center; justify-content:center; background:#0f0f1a; font-family:'Segoe UI',system-ui,sans-serif; color:#fff; }
 
-  /* Setup */
   #setupScreen {
-    display: flex; flex-direction: column; align-items: center; gap: 20px;
-    padding: 36px 28px; background: #1e1e30; border-radius: 24px;
-    width: 100%; max-width: 380px; border: 2px solid #2a2a40;
+    display:flex; flex-direction:column; align-items:center; gap:20px;
+    padding:36px 28px; background:#1e1e30; border-radius:24px;
+    width:100%; max-width:380px; border:2px solid #2a2a40;
   }
   #setupScreen h1 {
-    font-size: 1.8rem; font-weight: 900; letter-spacing: 3px;
-    background: linear-gradient(135deg,#a78bfa,#60a5fa);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-transform: uppercase;
-  }
-  .setup-label { font-size:.72rem; letter-spacing:2px; opacity:.5; text-transform:uppercase; align-self:flex-start; }
-  .setup-input {
-    width:100%; padding:12px 16px; background:#13131f;
-    border:2px solid #2a2a40; border-radius:12px; color:#fff;
-    font-size:1rem; outline:none; transition:border-color .2s; margin-top:6px;
-  }
-  .setup-input:focus { border-color:#a78bfa; }
-  .mode-btns { display:flex; gap:10px; width:100%; }
-  .mode-btn {
-    flex:1; padding:12px; border-radius:12px; border:2px solid #2a2a40;
-    background:#13131f; color:#fff; font-size:.9rem; font-weight:700;
-    cursor:pointer; transition:all .2s; letter-spacing:1px;
-  }
-  .mode-btn.active { border-color:#a78bfa; background:#2e1f4e; color:#a78bfa; }
-  .room-row { display:flex; gap:8px; width:100%; margin-top:6px; }
-  .room-row .setup-input { margin-top:0; }
-  .dice-btn {
-    padding:0 16px; background:#13131f; border:2px solid #2a2a40;
-    border-radius:12px; color:#fff; font-size:1.1rem; cursor:pointer;
-    transition:border-color .2s; flex-shrink:0;
-  }
-  .dice-btn:hover { border-color:#a78bfa; }
-  .start-btn {
-    width:100%; padding:14px; border:none; border-radius:50px;
-    background:linear-gradient(135deg,#a78bfa,#60a5fa);
-    color:#fff; font-size:1rem; font-weight:800; letter-spacing:1px;
-    text-transform:uppercase; cursor:pointer; transition:opacity .2s, transform .15s; margin-top:4px;
-  }
-  .start-btn:hover { opacity:.88; transform:scale(1.03); }
-  .setup-note { font-size:.75rem; color:#4a4a6a; text-align:center; line-height:1.5; }
-
-  /* Waiting */
-  #waitingScreen {
-    display:none; flex-direction:column; align-items:center; gap:20px;
-    padding:40px 28px; background:#1e1e30; border-radius:24px;
-    width:100%; max-width:380px; border:2px solid #2a2a40; text-align:center;
-  }
-  .waiting-spinner {
-    width:52px; height:52px; border:4px solid #2a2a40;
-    border-top-color:#a78bfa; border-radius:50%; animation:spin 1s linear infinite;
-  }
-  @keyframes spin { to{transform:rotate(360deg)} }
-  .waiting-title { font-size:1.1rem; font-weight:700; letter-spacing:1px; }
-  .waiting-code {
-    background:#13131f; border:2px solid #2a2a40; border-radius:14px;
-    padding:14px 24px; font-size:1.6rem; font-weight:900; letter-spacing:6px; color:#a78bfa;
-  }
-  .waiting-hint { font-size:.8rem; color:#94a3b8; line-height:1.6; }
-  .copy-btn {
-    padding:10px 24px; background:#13131f; border:2px solid #2a2a40;
-    border-radius:50px; color:#a78bfa; font-size:.85rem; font-weight:700;
-    letter-spacing:1px; cursor:pointer; transition:all .2s;
-  }
-  .copy-btn:hover { border-color:#a78bfa; }
-  .cancel-btn { padding:8px 20px; background:none; border:none; color:#4a4a6a; font-size:.8rem; cursor:pointer; text-decoration:underline; }
-
-  /* Game */
-  #gameScreen { display:none; flex-direction:column; align-items:center; gap:16px; padding:24px 16px; width:100%; max-width:420px; }
-  h1 {
-    font-size:1.8rem; font-weight:800; letter-spacing:3px;
+    font-size:1.8rem; font-weight:900; letter-spacing:3px;
     background:linear-gradient(135deg,#a78bfa,#60a5fa);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-transform:uppercase;
   }
-  .online-pill {
-    font-size:.7rem; letter-spacing:1.5px; text-transform:uppercase;
-    background:#1e1e30; border:1.5px solid #2a2a40; border-radius:99px;
-    padding:4px 14px; color:#94a3b8; display:none; align-items:center; gap:6px;
-  }
+  .setup-label { font-size:.72rem; letter-spacing:2px; opacity:.5; text-transform:uppercase; align-self:flex-start; }
+  .setup-input { width:100%; padding:12px 16px; background:#13131f; border:2px solid #2a2a40; border-radius:12px; color:#fff; font-size:1rem; outline:none; transition:border-color .2s; margin-top:6px; }
+  .setup-input:focus { border-color:#a78bfa; }
+  .mode-btns { display:flex; gap:10px; width:100%; }
+  .mode-btn { flex:1; padding:12px; border-radius:12px; border:2px solid #2a2a40; background:#13131f; color:#fff; font-size:.9rem; font-weight:700; cursor:pointer; transition:all .2s; letter-spacing:1px; }
+  .mode-btn.active { border-color:#a78bfa; background:#2e1f4e; color:#a78bfa; }
+  .room-row { display:flex; gap:8px; width:100%; margin-top:6px; }
+  .room-row .setup-input { margin-top:0; }
+  .dice-btn { padding:0 16px; background:#13131f; border:2px solid #2a2a40; border-radius:12px; color:#fff; font-size:1.1rem; cursor:pointer; flex-shrink:0; }
+  .dice-btn:hover { border-color:#a78bfa; }
+  .start-btn { width:100%; padding:14px; border:none; border-radius:50px; background:linear-gradient(135deg,#a78bfa,#60a5fa); color:#fff; font-size:1rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:opacity .2s,transform .15s; margin-top:4px; }
+  .start-btn:hover { opacity:.88; transform:scale(1.03); }
+  .setup-note { font-size:.75rem; color:#4a4a6a; text-align:center; line-height:1.5; }
+
+  #waitingScreen { display:none; flex-direction:column; align-items:center; gap:20px; padding:40px 28px; background:#1e1e30; border-radius:24px; width:100%; max-width:380px; border:2px solid #2a2a40; text-align:center; }
+  .waiting-spinner { width:52px; height:52px; border:4px solid #2a2a40; border-top-color:#a78bfa; border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .waiting-title { font-size:1.1rem; font-weight:700; letter-spacing:1px; }
+  .waiting-code { background:#13131f; border:2px solid #2a2a40; border-radius:14px; padding:14px 24px; font-size:1.6rem; font-weight:900; letter-spacing:6px; color:#a78bfa; }
+  .waiting-hint { font-size:.8rem; color:#94a3b8; line-height:1.6; }
+  .copy-btn { padding:10px 24px; background:#13131f; border:2px solid #2a2a40; border-radius:50px; color:#a78bfa; font-size:.85rem; font-weight:700; letter-spacing:1px; cursor:pointer; transition:all .2s; }
+  .copy-btn:hover { border-color:#a78bfa; }
+  .cancel-btn { padding:8px 20px; background:none; border:none; color:#4a4a6a; font-size:.8rem; cursor:pointer; text-decoration:underline; }
+
+  #gameScreen { display:none; flex-direction:column; align-items:center; gap:16px; padding:24px 16px; width:100%; max-width:420px; }
+  h1 { font-size:1.8rem; font-weight:800; letter-spacing:3px; background:linear-gradient(135deg,#a78bfa,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-transform:uppercase; }
+  .online-pill { font-size:.7rem; letter-spacing:1.5px; text-transform:uppercase; background:#1e1e30; border:1.5px solid #2a2a40; border-radius:99px; padding:4px 14px; color:#94a3b8; display:none; align-items:center; gap:6px; }
   .online-pill .dot { width:7px; height:7px; border-radius:50%; background:#4ade80; animation:dotPulse 1.5s ease infinite; }
   @keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
   .timer-wrap { width:100%; }
   .timer-bar-bg { width:100%; height:8px; background:#1e1e30; border-radius:99px; overflow:hidden; }
-  .timer-bar { height:100%; width:100%; background:linear-gradient(90deg,#a78bfa,#60a5fa); border-radius:99px; transition:width .9s linear, background .5s; }
+  .timer-bar { height:100%; width:100%; background:linear-gradient(90deg,#a78bfa,#60a5fa); border-radius:99px; transition:width .9s linear,background .5s; }
   .timer-bar.danger { background:linear-gradient(90deg,#ef4444,#f97316); }
   .timer-label { text-align:center; font-size:.85rem; font-weight:700; margin-top:5px; letter-spacing:1px; }
   .timer-label.danger { color:#ef4444; animation:blink .5s ease infinite alternate; }
   @keyframes blink { from{opacity:.5} to{opacity:1} }
 
   .scoreboard { display:flex; gap:10px; width:100%; }
-  .score-card {
-    flex:1; background:#1e1e30; border-radius:14px; padding:12px 8px;
-    text-align:center; border:2px solid transparent; transition:border-color .3s, box-shadow .3s;
-  }
+  .score-card { flex:1; background:#1e1e30; border-radius:14px; padding:12px 8px; text-align:center; border:2px solid transparent; transition:border-color .3s,box-shadow .3s; }
   .score-card.active-x { border-color:#a78bfa; box-shadow:0 0 16px #a78bfa44; }
   .score-card.active-o { border-color:#60a5fa; box-shadow:0 0 16px #60a5fa44; }
   .score-card .p-name { font-size:.6rem; letter-spacing:1px; opacity:.55; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -124,13 +75,7 @@
   @keyframes pulse { from{opacity:.7;transform:scale(.98)} to{opacity:1;transform:scale(1.03)} }
 
   .board { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%; }
-  .cell {
-    aspect-ratio:1; background:#1e1e30; border-radius:16px;
-    display:flex; align-items:center; justify-content:center;
-    font-size:clamp(2rem,10vw,3rem); font-weight:900;
-    cursor:pointer; border:2px solid #2a2a40;
-    transition:background .2s, transform .15s, border-color .2s; user-select:none;
-  }
+  .cell { aspect-ratio:1; background:#1e1e30; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:clamp(2rem,10vw,3rem); font-weight:900; cursor:pointer; border:2px solid #2a2a40; transition:background .2s,transform .15s,border-color .2s; user-select:none; }
   .cell:hover:not(.taken) { background:#26263e; border-color:#3a3a58; transform:scale(1.04); }
   .cell.taken { cursor:default; }
   .cell.x { color:#a78bfa; } .cell.o { color:#60a5fa; }
@@ -143,38 +88,20 @@
   @keyframes winPulse { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1.05)} }
 
   .bottom-btns { display:flex; gap:10px; }
-  .btn { padding:11px 24px; border:none; border-radius:50px; font-size:.9rem; font-weight:700; letter-spacing:1px; cursor:pointer; transition:opacity .2s, transform .15s; text-transform:uppercase; }
+  .btn { padding:11px 24px; border:none; border-radius:50px; font-size:.9rem; font-weight:700; letter-spacing:1px; cursor:pointer; transition:opacity .2s,transform .15s; text-transform:uppercase; }
   .btn-restart { background:linear-gradient(135deg,#a78bfa,#60a5fa); color:#fff; }
   .btn-menu    { background:#1e1e30; color:#94a3b8; border:2px solid #2a2a40; }
   .btn:hover { opacity:.85; transform:scale(1.04); } .btn:active { transform:scale(.97); }
 
-  .sound-btn {
-    position:fixed; top:14px; right:14px; background:#1e1e30;
-    border:2px solid #2a2a40; color:#fff; border-radius:50%;
-    width:36px; height:36px; font-size:1rem; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; transition:border-color .2s;
-  }
+  .sound-btn { position:fixed; top:14px; right:14px; background:#1e1e30; border:2px solid #2a2a40; color:#fff; border-radius:50%; width:36px; height:36px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color .2s; }
   .sound-btn:hover { border-color:#a78bfa; }
 
-  .toast {
-    position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(60px);
-    background:#2e1f4e; border:2px solid #a78bfa; color:#fff;
-    padding:10px 22px; border-radius:50px; font-size:.9rem; font-weight:600;
-    letter-spacing:1px; opacity:0; transition:all .4s ease; white-space:nowrap; pointer-events:none;
-  }
+  .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(60px); background:#2e1f4e; border:2px solid #a78bfa; color:#fff; padding:10px 22px; border-radius:50px; font-size:.9rem; font-weight:600; letter-spacing:1px; opacity:0; transition:all .4s ease; white-space:nowrap; pointer-events:none; }
   .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* Reveal */
-  #revealOverlay {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,.8);
-    z-index:200; align-items:center; justify-content:center;
-  }
+  #revealOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:200; align-items:center; justify-content:center; }
   #revealOverlay.show { display:flex; }
-  .reveal-box {
-    background:#1a1a2e; border:2px solid #2a2a40; border-radius:24px;
-    padding:32px 28px; text-align:center; max-width:320px; width:90%;
-    animation:slideUp .35s cubic-bezier(.34,1.46,.64,1);
-  }
+  .reveal-box { background:#1a1a2e; border:2px solid #2a2a40; border-radius:24px; padding:32px 28px; text-align:center; max-width:320px; width:90%; animation:slideUp .35s cubic-bezier(.34,1.46,.64,1); }
   @keyframes slideUp { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
   .reveal-title { font-size:.7rem; letter-spacing:3px; text-transform:uppercase; color:#94a3b8; margin-bottom:18px; }
   .reveal-row { display:flex; justify-content:center; gap:24px; margin-bottom:20px; }
@@ -185,12 +112,7 @@
   .reveal-vs { font-size:1rem; font-weight:800; opacity:.3; align-self:center; }
   .reveal-sub { font-size:.82rem; color:#94a3b8; margin-bottom:20px; }
   .reveal-sub span { color:#fff; font-weight:700; }
-  .reveal-btn {
-    padding:12px 32px; border:none; border-radius:50px;
-    background:linear-gradient(135deg,#a78bfa,#60a5fa);
-    color:#fff; font-size:.95rem; font-weight:800; cursor:pointer;
-    letter-spacing:1px; text-transform:uppercase;
-  }
+  .reveal-btn { padding:12px 32px; border:none; border-radius:50px; background:linear-gradient(135deg,#a78bfa,#60a5fa); color:#fff; font-size:.95rem; font-weight:800; cursor:pointer; letter-spacing:1px; text-transform:uppercase; }
   .reveal-btn:hover { opacity:.85; }
 </style>
 </head>
@@ -204,15 +126,9 @@
   <div class="reveal-box">
     <div class="reveal-title">✨ Symbols Assigned!</div>
     <div class="reveal-row">
-      <div class="reveal-player">
-        <div class="reveal-name" id="revealNameX"></div>
-        <div class="reveal-sym x">X</div>
-      </div>
+      <div class="reveal-player"><div class="reveal-name" id="revealNameX"></div><div class="reveal-sym x">X</div></div>
       <div class="reveal-vs">VS</div>
-      <div class="reveal-player">
-        <div class="reveal-name" id="revealNameO"></div>
-        <div class="reveal-sym o">O</div>
-      </div>
+      <div class="reveal-player"><div class="reveal-name" id="revealNameO"></div><div class="reveal-sym o">O</div></div>
     </div>
     <div class="reveal-sub"><span id="revealFirst"></span> goes first!</div>
     <button class="reveal-btn" id="revealPlayBtn">Let's Play</button>
@@ -244,7 +160,7 @@
       <input class="setup-input" id="roomCode" placeholder="e.g. TIGER" maxlength="8" style="text-transform:uppercase;letter-spacing:3px">
       <button class="dice-btn" id="genRoom">🎲</button>
     </div>
-    <div class="setup-note" style="margin-top:10px">Create a code or enter your friend's code to join.</div>
+    <div class="setup-note" style="margin-top:10px">No API key needed! Share code with your friend. Each player enters only their own name.</div>
   </div>
   <button class="start-btn" id="startBtn">Start Game</button>
 </div>
@@ -254,7 +170,7 @@
   <div class="waiting-spinner"></div>
   <div class="waiting-title">Waiting for opponent…</div>
   <div class="waiting-code" id="waitingCode"></div>
-  <div class="waiting-hint">Share this code with your friend.<br>They enter their own name + this code and join.</div>
+  <div class="waiting-hint">Share this code with your friend.<br>They enter their <strong>own name</strong> + this code and join.</div>
   <button class="copy-btn" id="copyCodeBtn">📋 Copy Code</button>
   <button class="cancel-btn" id="cancelWaitBtn">Cancel</button>
 </div>
@@ -268,20 +184,9 @@
     <div class="timer-label" id="timerLabel">45s</div>
   </div>
   <div class="scoreboard">
-    <div class="score-card x active-x" id="cardX">
-      <div class="p-name" id="labelX">X</div>
-      <div class="p-sym">X</div>
-      <div class="p-score" id="scoreX">0</div>
-    </div>
-    <div class="score-draw">
-      <div class="p-name">Draw</div>
-      <div class="p-score" id="scoreDraw">0</div>
-    </div>
-    <div class="score-card o" id="cardO">
-      <div class="p-name" id="labelO">O</div>
-      <div class="p-sym">O</div>
-      <div class="p-score" id="scoreO">0</div>
-    </div>
+    <div class="score-card x active-x" id="cardX"><div class="p-name" id="labelX">X</div><div class="p-sym">X</div><div class="p-score" id="scoreX">0</div></div>
+    <div class="score-draw"><div class="p-name">Draw</div><div class="p-score" id="scoreDraw">0</div></div>
+    <div class="score-card o" id="cardO"><div class="p-name" id="labelO">O</div><div class="p-sym">O</div><div class="p-score" id="scoreO">0</div></div>
   </div>
   <div class="status" id="status"></div>
   <div class="board" id="board"></div>
@@ -292,371 +197,368 @@
 </div>
 
 <script>
-/* ── PASTE YOUR ABLY ROOT API KEY HERE ── */
-const ABLY_KEY = 'nkVrsg.nijTYA:NwXEzW28sPl_aGxjK2kFn9lIsHp23LIKeCl09QzRWlY';
-/* ─────────────────────────────────────── */
-
 const TIMER_MAX = 45;
 const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
 let g = {}, timerInterval = null, soundOn = true;
 let gameMode = 'local', mySymbol = null;
-let ablyClient = null, ablyChannel = null;
+let peer = null, conn = null, isHost = false;
 
 /* ── Audio ── */
 const actx = new (window.AudioContext || window.webkitAudioContext)();
 function tone(freq, type='sine', dur=0.12, vol=0.22) {
   if (!soundOn) return;
-  if (actx.state === 'suspended') actx.resume();
-  const o = actx.createOscillator(), gn = actx.createGain();
+  if (actx.state==='suspended') actx.resume();
+  const o=actx.createOscillator(), gn=actx.createGain();
   o.connect(gn); gn.connect(actx.destination);
-  o.type = type; o.frequency.setValueAtTime(freq, actx.currentTime);
-  gn.gain.setValueAtTime(vol, actx.currentTime);
-  gn.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
-  o.start(); o.stop(actx.currentTime + dur);
+  o.type=type; o.frequency.setValueAtTime(freq,actx.currentTime);
+  gn.gain.setValueAtTime(vol,actx.currentTime);
+  gn.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+dur);
+  o.start(); o.stop(actx.currentTime+dur);
 }
 const sfx = {
-  move:    () => tone(440,'sine',.1),
-  win:     () => { tone(523,'triangle',.15); setTimeout(()=>tone(659,'triangle',.2),150); setTimeout(()=>tone(784,'triangle',.3),300); },
-  draw:    () => { tone(330,'sawtooth',.15,.15); setTimeout(()=>tone(300,'sawtooth',.2,.1),160); },
-  tick:    () => tone(220,'sine',.05,.08),
-  undo:    () => { tone(350,'sawtooth',.1,.12); setTimeout(()=>tone(280,'sawtooth',.12,.1),110); },
-  timeout: () => { tone(200,'sawtooth',.2,.2); setTimeout(()=>tone(160,'sawtooth',.25,.15),200); }
+  move:    ()=>tone(440,'sine',.1),
+  win:     ()=>{tone(523,'triangle',.15);setTimeout(()=>tone(659,'triangle',.2),150);setTimeout(()=>tone(784,'triangle',.3),300);},
+  draw:    ()=>{tone(330,'sawtooth',.15,.15);setTimeout(()=>tone(300,'sawtooth',.2,.1),160);},
+  tick:    ()=>tone(220,'sine',.05,.08),
+  undo:    ()=>{tone(350,'sawtooth',.1,.12);setTimeout(()=>tone(280,'sawtooth',.12,.1),110);},
+  timeout: ()=>{tone(200,'sawtooth',.2,.2);setTimeout(()=>tone(160,'sawtooth',.25,.15),200);}
 };
 
 /* ── DOM ── */
-const setupScreen   = document.getElementById('setupScreen');
-const waitingScreen = document.getElementById('waitingScreen');
-const gameScreen    = document.getElementById('gameScreen');
-const boardEl       = document.getElementById('board');
-const statusEl      = document.getElementById('status');
-const timerBar      = document.getElementById('timerBar');
-const timerLabel    = document.getElementById('timerLabel');
-const scoreXEl      = document.getElementById('scoreX');
-const scoreOEl      = document.getElementById('scoreO');
-const scoreDrawEl   = document.getElementById('scoreDraw');
-const cardX         = document.getElementById('cardX');
-const cardO         = document.getElementById('cardO');
-const labelX        = document.getElementById('labelX');
-const labelO        = document.getElementById('labelO');
-const toastEl       = document.getElementById('toast');
-const onlinePill    = document.getElementById('onlinePill');
-const revealOverlay = document.getElementById('revealOverlay');
+const setupScreen=document.getElementById('setupScreen'), waitingScreen=document.getElementById('waitingScreen'), gameScreen=document.getElementById('gameScreen');
+const boardEl=document.getElementById('board'), statusEl=document.getElementById('status');
+const timerBar=document.getElementById('timerBar'), timerLabel=document.getElementById('timerLabel');
+const scoreXEl=document.getElementById('scoreX'), scoreOEl=document.getElementById('scoreO'), scoreDrawEl=document.getElementById('scoreDraw');
+const cardX=document.getElementById('cardX'), cardO=document.getElementById('cardO');
+const labelX=document.getElementById('labelX'), labelO=document.getElementById('labelO');
+const toastEl=document.getElementById('toast'), onlinePill=document.getElementById('onlinePill'), revealOverlay=document.getElementById('revealOverlay');
 
 /* ── Mode toggle ── */
-document.getElementById('modeLocal').addEventListener('click', () => {
-  gameMode = 'local';
+document.getElementById('modeLocal').addEventListener('click',()=>{
+  gameMode='local';
   document.getElementById('modeLocal').classList.add('active');
   document.getElementById('modeOnline').classList.remove('active');
-  document.getElementById('localFields').style.display = 'block';
-  document.getElementById('onlineFields').style.display = 'none';
+  document.getElementById('localFields').style.display='block';
+  document.getElementById('onlineFields').style.display='none';
 });
-document.getElementById('modeOnline').addEventListener('click', () => {
-  gameMode = 'online';
+document.getElementById('modeOnline').addEventListener('click',()=>{
+  gameMode='online';
   document.getElementById('modeOnline').classList.add('active');
   document.getElementById('modeLocal').classList.remove('active');
-  document.getElementById('localFields').style.display = 'none';
-  document.getElementById('onlineFields').style.display = 'block';
+  document.getElementById('localFields').style.display='none';
+  document.getElementById('onlineFields').style.display='block';
 });
-document.getElementById('genRoom').addEventListener('click', () => {
-  document.getElementById('roomCode').value = Math.random().toString(36).slice(2,6).toUpperCase();
+document.getElementById('genRoom').addEventListener('click',()=>{
+  document.getElementById('roomCode').value=Math.random().toString(36).slice(2,6).toUpperCase();
 });
 
 /* ── Start ── */
-document.getElementById('startBtn').addEventListener('click', () => {
-  if (actx.state === 'suspended') actx.resume();
-  gameMode === 'local' ? startLocal() : startOnline();
+document.getElementById('startBtn').addEventListener('click',()=>{
+  if(actx.state==='suspended') actx.resume();
+  gameMode==='local' ? startLocal() : startOnline();
 });
 
-/* ── Local mode ── */
-function startLocal() {
-  const n1 = document.getElementById('myName').value.trim() || 'Player 1';
-  const n2 = document.getElementById('name2').value.trim() || 'Player 2';
-  const xFirst = Math.random() < .5;
-  launchGame({ X: xFirst ? n1 : n2, O: xFirst ? n2 : n1 }, false);
+function startLocal(){
+  const n1=document.getElementById('myName').value.trim()||'Player 1';
+  const n2=document.getElementById('name2').value.trim()||'Player 2';
+  const xFirst=Math.random()<.5;
+  launchGame({X:xFirst?n1:n2, O:xFirst?n2:n1},false);
 }
 
-/* ── Online mode — pure pub/sub, zero presence ── */
-function startOnline() {
-  if (ABLY_KEY === 'YOUR_ABLY_API_KEY_HERE') { showToast('Paste your Ably API key in the code!'); return; }
-  const myName = document.getElementById('myName').value.trim() || 'Player';
-  const room   = document.getElementById('roomCode').value.trim().toUpperCase();
-  if (!room) { showToast('Enter a room code first!'); return; }
+/* ── PeerJS online — no API key needed ── */
+function startOnline(){
+  const myName=document.getElementById('myName').value.trim()||'Player';
+  const room=document.getElementById('roomCode').value.trim().toUpperCase();
+  if(!room){showToast('Enter a room code first!');return;}
 
+  cleanupPeer();
   show('waiting');
-  document.getElementById('waitingCode').textContent = room;
-  document.getElementById('pillRoom').textContent = room;
+  document.getElementById('waitingCode').textContent=room;
+  document.getElementById('pillRoom').textContent=room;
 
-  if (ablyClient) { ablyClient.close(); ablyClient = null; ablyChannel = null; }
+  // Try to claim the room ID → if we get it, we're the host
+  peer=new Peer('ttt-'+room);
 
-  // Unique ID for this session — used to avoid acting on our own messages
-  const myId = Math.random().toString(36).slice(2, 9);
-  let iAmHost = false;
-
-  ablyClient  = new Ably.Realtime({ key: ABLY_KEY });
-  ablyChannel = ablyClient.channels.get('ttt-' + room);
-
-  /* Subscribe to all messages BEFORE announcing ourselves */
-  ablyChannel.subscribe('host-announce', msg => {
-    if (msg.data.id === myId) return;            // ignore our own broadcast
-    iAmHost  = false;
-    mySymbol = 'O';
-    ablyChannel.publish('joiner-announce', { name: myName, id: myId });
-  });
-
-  ablyChannel.subscribe('joiner-announce', msg => {
-    if (!iAmHost || msg.data.id === myId) return;
-    const xFirst = Math.random() < .5;
-    ablyChannel.publish('start', {
-      names: {
-        X: xFirst ? myName       : msg.data.name,
-        O: xFirst ? msg.data.name : myName
-      },
-      hostId: myId
+  peer.on('open', ()=>{
+    // We are the HOST — wait for joiner to connect
+    isHost=true;
+    peer.on('connection', incoming=>{
+      conn=incoming;
+      setupConn(myName, room, true);
     });
   });
 
-  ablyChannel.subscribe('start', msg => {
-    mySymbol = (msg.data.hostId === myId) ? 'X' : 'O';
-    onlinePill.style.display = 'flex';
-    launchGame(msg.data.names, true);
-  });
-
-  ablyChannel.subscribe('move', msg => {
-    if (msg.data.sym !== mySymbol) onRemoteMove(msg.data.index);
-  });
-
-  ablyChannel.subscribe('restart', () => doRestart(false));
-
-  /* Attach channel, then announce as host */
-  ablyChannel.attach(err => {
-    if (err) { showToast('Connection failed — check your API key.'); show('setup'); return; }
-    iAmHost = true;
-    ablyChannel.publish('host-announce', { name: myName, id: myId });
+  peer.on('error', err=>{
+    if(err.type==='unavailable-id'){
+      // Room already exists → we are the JOINER
+      isHost=false;
+      cleanupPeer();
+      peer=new Peer(); // random ID for joiner
+      peer.on('open',()=>{
+        conn=peer.connect('ttt-'+room);
+        setupConn(myName, room, false);
+      });
+      peer.on('error', e=>{showToast('Could not connect: '+e.message);show('setup');});
+    } else {
+      showToast('Connection error: '+err.message);
+      show('setup');
+    }
   });
 }
 
-function onRemoteMove(i) {
-  if (g.gameOver || g.board[i]) return;
+function setupConn(myName, room, asHost){
+  const onOpen=()=>{
+    if(!asHost){
+      // Joiner introduces themselves
+      send({type:'hello', name:myName});
+    }
+  };
+
+  const onData=data=>{
+    if(data.type==='hello' && asHost){
+      // Host receives joiner's name → assign symbols and start
+      const xFirst=Math.random()<.5;
+      const names={
+        X: xFirst ? myName  : data.name,
+        O: xFirst ? data.name : myName
+      };
+      mySymbol = names.X===myName ? 'X' : 'O';
+      send({type:'start', names});
+      onlinePill.style.display='flex';
+      launchGame(names, true);
+    }
+    else if(data.type==='start'){
+      // Joiner receives start from host
+      mySymbol = data.names.X===myName ? 'X' : 'O';
+      onlinePill.style.display='flex';
+      launchGame(data.names, true);
+    }
+    else if(data.type==='move'){
+      onRemoteMove(data.index);
+    }
+    else if(data.type==='restart'){
+      doRestart(false);
+    }
+  };
+
+  const onClose=()=>showToast('Opponent disconnected!');
+
+  if(conn.open){
+    onOpen();
+    conn.on('data',onData);
+    conn.on('close',onClose);
+  } else {
+    conn.on('open',()=>{
+      onOpen();
+      conn.on('data',onData);
+      conn.on('close',onClose);
+    });
+  }
+}
+
+function send(data){
+  if(conn && conn.open) conn.send(data);
+}
+
+function onRemoteMove(i){
+  if(g.gameOver||g.board[i]) return;
   applyMove(i);
 }
 
-/* ── Cancel / disconnect ── */
-document.getElementById('cancelWaitBtn').addEventListener('click', disconnectAbly);
-function disconnectAbly() {
-  if (ablyClient) { ablyClient.close(); ablyClient = null; ablyChannel = null; }
-  show('setup');
+function cleanupPeer(){
+  if(conn){conn.close();conn=null;}
+  if(peer){peer.destroy();peer=null;}
 }
 
-document.getElementById('copyCodeBtn').addEventListener('click', () => {
-  navigator.clipboard.writeText(document.getElementById('waitingCode').textContent)
-    .then(() => showToast('Code copied!'));
+/* ── Cancel ── */
+document.getElementById('cancelWaitBtn').addEventListener('click',()=>{cleanupPeer();show('setup');});
+document.getElementById('copyCodeBtn').addEventListener('click',()=>{
+  navigator.clipboard.writeText(document.getElementById('waitingCode').textContent).then(()=>showToast('Code copied!'));
 });
 
 /* ── Launch game ── */
-function launchGame(names, isOnline) {
-  g = {
-    board: Array(9).fill(''), current: 'X', gameOver: false,
-    scores: {X:0,O:0,draw:0}, names, history: [], timeLeft: TIMER_MAX, isOnline
-  };
-  labelX.textContent = names.X;
-  labelO.textContent = names.O;
-  document.getElementById('revealNameX').textContent = names.X;
-  document.getElementById('revealNameO').textContent = names.O;
-  document.getElementById('revealFirst').textContent = names.X;
+function launchGame(names, isOnline){
+  g={board:Array(9).fill(''),current:'X',gameOver:false,scores:{X:0,O:0,draw:0},names,history:[],timeLeft:TIMER_MAX,isOnline};
+  labelX.textContent=names.X; labelO.textContent=names.O;
+  document.getElementById('revealNameX').textContent=names.X;
+  document.getElementById('revealNameO').textContent=names.O;
+  document.getElementById('revealFirst').textContent=names.X;
   revealOverlay.classList.add('show');
-  show('game');
-  buildBoard(); render();
+  show('game'); buildBoard(); render();
 }
 
-document.getElementById('revealPlayBtn').addEventListener('click', () => {
+document.getElementById('revealPlayBtn').addEventListener('click',()=>{
   revealOverlay.classList.remove('show');
   turnStatus(); startTimer();
 });
 
 /* ── Timer ── */
-function startTimer() {
-  clearInterval(timerInterval);
-  g.timeLeft = TIMER_MAX; updateTimerUI();
-  timerInterval = setInterval(() => {
+function startTimer(){
+  clearInterval(timerInterval); g.timeLeft=TIMER_MAX; updateTimerUI();
+  timerInterval=setInterval(()=>{
     g.timeLeft--;
-    if (g.timeLeft <= 10) sfx.tick();
+    if(g.timeLeft<=10) sfx.tick();
     updateTimerUI();
-    if (g.timeLeft <= 0) onTimeout();
-  }, 1000);
+    if(g.timeLeft<=0) onTimeout();
+  },1000);
 }
-function stopTimer()  { clearInterval(timerInterval); }
-function resetTimer() { stopTimer(); if (!g.gameOver) startTimer(); }
-function updateTimerUI() {
-  timerBar.style.width = (g.timeLeft / TIMER_MAX * 100) + '%';
-  timerLabel.textContent = g.timeLeft + 's';
-  const d = g.timeLeft <= 10;
-  timerBar.classList.toggle('danger', d);
-  timerLabel.classList.toggle('danger', d);
+function stopTimer(){clearInterval(timerInterval);}
+function resetTimer(){stopTimer();if(!g.gameOver)startTimer();}
+function updateTimerUI(){
+  timerBar.style.width=(g.timeLeft/TIMER_MAX*100)+'%';
+  timerLabel.textContent=g.timeLeft+'s';
+  const d=g.timeLeft<=10;
+  timerBar.classList.toggle('danger',d); timerLabel.classList.toggle('danger',d);
 }
-function onTimeout() {
-  stopTimer(); g.gameOver = true;
-  const winner = g.current === 'X' ? 'O' : 'X';
+function onTimeout(){
+  stopTimer(); g.gameOver=true;
+  const winner=g.current==='X'?'O':'X';
   g.scores[winner]++; render();
-  const cls = winner === 'X' ? 'sym-x' : 'sym-o';
-  statusEl.innerHTML = `<span class="winner-msg ${cls}">${g.names[winner]} wins (timeout)! ⏰</span>`;
+  statusEl.innerHTML=`<span class="winner-msg ${winner==='X'?'sym-x':'sym-o'}">${g.names[winner]} wins (timeout)! ⏰</span>`;
   sfx.timeout();
 }
 
 /* ── Board ── */
-function buildBoard() {
-  boardEl.innerHTML = '';
-  for (let i = 0; i < 9; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cell'; cell.dataset.i = i;
-    cell.addEventListener('click', onCellClick);
+function buildBoard(){
+  boardEl.innerHTML='';
+  for(let i=0;i<9;i++){
+    const cell=document.createElement('div');
+    cell.className='cell'; cell.dataset.i=i;
+    cell.addEventListener('click',onCellClick);
     boardEl.appendChild(cell);
   }
 }
 
 /* ── Move ── */
-function onCellClick(e) {
-  if (actx.state === 'suspended') actx.resume();
-  const i = +e.currentTarget.dataset.i;
-  if (g.gameOver || g.board[i]) return;
-  if (g.isOnline && g.current !== mySymbol) { showToast("Wait for your turn!"); return; }
-  if (g.isOnline) ablyChannel.publish('move', { index: i, sym: mySymbol });
+function onCellClick(e){
+  if(actx.state==='suspended') actx.resume();
+  const i=+e.currentTarget.dataset.i;
+  if(g.gameOver||g.board[i]) return;
+  if(g.isOnline&&g.current!==mySymbol){showToast("Wait for your turn!");return;}
+  if(g.isOnline) send({type:'move',index:i});
   applyMove(i);
 }
 
-function applyMove(i) {
-  g.board[i] = g.current;
-  g.history.push({ index: i, sym: g.current });
-  const cells = boardEl.querySelectorAll('.cell');
+function applyMove(i){
+  g.board[i]=g.current;
+  g.history.push({index:i,sym:g.current});
+  const cells=boardEl.querySelectorAll('.cell');
   cells[i].classList.add('pop');
-  cells[i].addEventListener('animationend', () => cells[i].classList.remove('pop'), { once: true });
+  cells[i].addEventListener('animationend',()=>cells[i].classList.remove('pop'),{once:true});
   sfx.move();
-  const result = checkWinner(g.board);
-  if (result) {
-    g.gameOver = true; stopTimer();
-    if (result.draw) {
+  const result=checkWinner(g.board);
+  if(result){
+    g.gameOver=true; stopTimer();
+    if(result.draw){
       g.scores.draw++; render();
-      statusEl.innerHTML = `<span style="color:#94a3b8">Draw! ↩ Undoing last 2 moves…</span>`;
-      sfx.draw();
-      setTimeout(undoLastTwo, 900);
+      statusEl.innerHTML=`<span style="color:#94a3b8">Draw! ↩ Undoing last 2 moves…</span>`;
+      sfx.draw(); setTimeout(undoLastTwo,900);
     } else {
       g.scores[result.winner]++; render(result.line);
-      const cls = result.winner === 'X' ? 'sym-x' : 'sym-o';
-      statusEl.innerHTML = `<span class="winner-msg ${cls}">${g.names[result.winner]} Wins! 🎉</span>`;
+      statusEl.innerHTML=`<span class="winner-msg ${result.winner==='X'?'sym-x':'sym-o'}">${g.names[result.winner]} Wins! 🎉</span>`;
       sfx.win();
     }
   } else {
-    g.current = g.current === 'X' ? 'O' : 'X';
+    g.current=g.current==='X'?'O':'X';
     render(); turnStatus(); resetTimer();
   }
 }
 
 /* ── Undo on draw ── */
-function undoLastTwo() {
-  if (g.history.length < 2) { resumeAfterDraw(); return; }
-  const cells = boardEl.querySelectorAll('.cell');
-  const last2 = g.history.splice(-2);
-  let done = 0;
-  last2.forEach(({ index }) => {
-    const cell = cells[index];
-    cell.classList.add('undo-out');
-    cell.addEventListener('animationend', () => {
-      g.board[index] = '';
-      cell.classList.remove('undo-out');
-      if (++done === 2) resumeAfterDraw();
-    }, { once: true });
+function undoLastTwo(){
+  if(g.history.length<2){resumeAfterDraw();return;}
+  const cells=boardEl.querySelectorAll('.cell');
+  const last2=g.history.splice(-2); let done=0;
+  last2.forEach(({index})=>{
+    const cell=cells[index]; cell.classList.add('undo-out');
+    cell.addEventListener('animationend',()=>{
+      g.board[index]=''; cell.classList.remove('undo-out');
+      if(++done===2) resumeAfterDraw();
+    },{once:true});
   });
   sfx.undo();
 }
-function resumeAfterDraw() {
-  g.gameOver = false; render(); turnStatus(); startTimer();
+function resumeAfterDraw(){
+  g.gameOver=false; render(); turnStatus(); startTimer();
   showToast('Board rewound — keep playing!');
 }
 
 /* ── Win check ── */
-function checkWinner(board) {
-  for (const line of WIN_LINES) {
-    const [a,b,c] = line;
-    if (board[a] && board[a] === board[b] && board[a] === board[c])
-      return { winner: board[a], line };
+function checkWinner(board){
+  for(const line of WIN_LINES){
+    const[a,b,c]=line;
+    if(board[a]&&board[a]===board[b]&&board[a]===board[c]) return{winner:board[a],line};
   }
-  if (board.every(v => v)) return { draw: true };
+  if(board.every(v=>v)) return{draw:true};
   return null;
 }
 
 /* ── Render ── */
-function render(winLine = null) {
-  const cells = boardEl.querySelectorAll('.cell');
-  cells.forEach((cell, i) => {
-    const val = g.board[i];
-    cell.className = 'cell' + (val ? ` taken ${val.toLowerCase()}` : '');
-    cell.textContent = val;
-    if (winLine && winLine.includes(i)) {
+function render(winLine=null){
+  const cells=boardEl.querySelectorAll('.cell');
+  cells.forEach((cell,i)=>{
+    const val=g.board[i];
+    cell.className='cell'+(val?` taken ${val.toLowerCase()}`:'');
+    cell.textContent=val;
+    if(winLine&&winLine.includes(i)){
       cell.classList.add('win');
-      if (g.board[winLine[0]] === 'O') cell.classList.add('o');
+      if(g.board[winLine[0]]==='O') cell.classList.add('o');
     }
   });
-  cardX.className = `score-card x${(!g.gameOver && g.current==='X') ? ' active-x' : ''}`;
-  cardO.className = `score-card o${(!g.gameOver && g.current==='O') ? ' active-o' : ''}`;
-  scoreXEl.textContent    = g.scores.X;
-  scoreOEl.textContent    = g.scores.O;
-  scoreDrawEl.textContent = g.scores.draw;
+  cardX.className=`score-card x${(!g.gameOver&&g.current==='X')?' active-x':''}`;
+  cardO.className=`score-card o${(!g.gameOver&&g.current==='O')?' active-o':''}`;
+  scoreXEl.textContent=g.scores.X; scoreOEl.textContent=g.scores.O; scoreDrawEl.textContent=g.scores.draw;
 }
-function turnStatus() {
-  const cls = g.current === 'X' ? 'sym-x' : 'sym-o';
-  statusEl.innerHTML = `<span class="${cls}">${g.names[g.current]}</span>'s turn`;
+function turnStatus(){
+  const cls=g.current==='X'?'sym-x':'sym-o';
+  statusEl.innerHTML=`<span class="${cls}">${g.names[g.current]}</span>'s turn`;
 }
 
 /* ── Restart ── */
-document.getElementById('restartBtn').addEventListener('click', () => {
-  if (g.isOnline) ablyChannel.publish('restart', {});
+document.getElementById('restartBtn').addEventListener('click',()=>{
+  if(g.isOnline) send({type:'restart'});
   doRestart(true);
 });
-function doRestart(reshuffleLocal) {
+function doRestart(reshuffleLocal){
   stopTimer();
-  if (!g.isOnline && reshuffleLocal) {
-    const {X, O} = g.names;
-    const swap = Math.random() < .5;
-    g.names = swap ? {X:O, O:X} : {X, O};
-    labelX.textContent = g.names.X; labelO.textContent = g.names.O;
-    document.getElementById('revealNameX').textContent = g.names.X;
-    document.getElementById('revealNameO').textContent = g.names.O;
-    document.getElementById('revealFirst').textContent = g.names.X;
+  if(!g.isOnline&&reshuffleLocal){
+    const{X,O}=g.names; const swap=Math.random()<.5;
+    g.names=swap?{X:O,O:X}:{X,O};
+    labelX.textContent=g.names.X; labelO.textContent=g.names.O;
+    document.getElementById('revealNameX').textContent=g.names.X;
+    document.getElementById('revealNameO').textContent=g.names.O;
+    document.getElementById('revealFirst').textContent=g.names.X;
     revealOverlay.classList.add('show');
   }
-  g.board = Array(9).fill(''); g.current = 'X'; g.gameOver = false; g.history = [];
+  g.board=Array(9).fill(''); g.current='X'; g.gameOver=false; g.history=[];
   buildBoard(); render();
-  if (!revealOverlay.classList.contains('show')) { turnStatus(); startTimer(); }
+  if(!revealOverlay.classList.contains('show')){turnStatus();startTimer();}
 }
 
 /* ── Menu ── */
-document.getElementById('menuBtn').addEventListener('click', () => {
-  stopTimer();
-  if (ablyClient) { ablyClient.close(); ablyClient = null; ablyChannel = null; }
-  onlinePill.style.display = 'none';
-  show('setup');
+document.getElementById('menuBtn').addEventListener('click',()=>{
+  stopTimer(); cleanupPeer();
+  onlinePill.style.display='none'; show('setup');
 });
 
 /* ── Sound ── */
-document.getElementById('soundBtn').addEventListener('click', () => {
-  soundOn = !soundOn;
-  document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+document.getElementById('soundBtn').addEventListener('click',()=>{
+  soundOn=!soundOn;
+  document.getElementById('soundBtn').textContent=soundOn?'🔊':'🔇';
 });
 
-/* ── Screen helper ── */
-function show(s) {
-  setupScreen.style.display   = s === 'setup'   ? 'flex' : 'none';
-  waitingScreen.style.display = s === 'waiting' ? 'flex' : 'none';
-  gameScreen.style.display    = s === 'game'    ? 'flex' : 'none';
+/* ── Helpers ── */
+function show(s){
+  setupScreen.style.display  =s==='setup'  ?'flex':'none';
+  waitingScreen.style.display=s==='waiting'?'flex':'none';
+  gameScreen.style.display   =s==='game'   ?'flex':'none';
 }
-
-/* ── Toast ── */
 let toastTimer;
-function showToast(msg) {
-  toastEl.textContent = msg;
-  toastEl.classList.add('show');
+function showToast(msg){
+  toastEl.textContent=msg; toastEl.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+  toastTimer=setTimeout(()=>toastEl.classList.remove('show'),2800);
 }
 </script>
 </body>
