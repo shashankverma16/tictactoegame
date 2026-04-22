@@ -306,7 +306,7 @@
 
 <script>
 /* ── PASTE YOUR ABLY ROOT API KEY HERE ── */
-const ABLY_KEY = 'nkVrsg.nijTYA:NwXEzW28sPl_aGxjK2kFn9lIsHp23LIKeCl09QzRWlY';
+const ABLY_KEY = 'aLl_4g.AUzRyw:sgdMTG4ulgy85BndZ3MF8Sx8io3ftI62MM7N2m6TGFk';
 /* ─────────────────────────────────────── */
 
 const TIMER_MAX = 45;
@@ -392,7 +392,7 @@ function startLocal() {
 
 /* ── Online ── */
 function startOnline() {
-  if (ABLY_KEY === 'nkVrsg.nijTYA:NwXEzW28sPl_aGxjK2kFn9lIsHp23LIKeCl09QzRWlY') { showToast('Paste your Ably API key in the code!'); return; }
+  if (ABLY_KEY === 'aLl_4g.AUzRyw:sgdMTG4ulgy85BndZ3MF8Sx8io3ftI62MM7N2m6TGFk') { showToast('Paste your Ably API key in the code!'); return; }
   const myName = document.getElementById('myName').value.trim() || 'Player';
   const room   = document.getElementById('roomCode').value.trim().toUpperCase();
   if (!room) { showToast('Enter a room code first!'); return; }
