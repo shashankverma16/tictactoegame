@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic Tac Toe</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: #0f0f1a;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #fff;
+  }
+
+  /* ── Setup Screen ── */
+  #setupScreen {
+    display: flex; flex-direction: column; align-items: center; gap: 22px;
+    padding: 36px 28px; background: #1e1e30; border-radius: 24px;
+    width: 100%; max-width: 400px; border: 2px solid #2a2a40;
+  }
+  #setupScreen h1 {
+    font-size: 1.8rem; font-weight: 900; letter-spacing: 3px;
+    background: linear-gradient(135deg,#a78bfa,#60a5fa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+  }
+  .setup-label { font-size:.75rem; letter-spacing:2px; opacity:.5; text-transform:uppercase; align-self:flex-start; }
+  .setup-input {
+    width:100%; padding:12px 16px; background:#13131f;
+    border:2px solid #2a2a40; border-radius:12px; color:#fff;
+    font-size:1rem; outline:none; transition:border-color .2s;
+  }
+  .setup-input:focus { border-color:#a78bfa; }
+  .mode-btns { display:flex; gap:10px; width:100%; }
+  .mode-btn {
+    flex:1; padding:12px; border-radius:12px; border:2px solid #2a2a40;
+    background:#13131f; color:#fff; font-size:.9rem; font-weight:700;
+    cursor:pointer; transition:all .2s; letter-spacing:1px;
+  }
+  .mode-btn.active { border-color:#a78bfa; background:#2e1f4e; color:#a78bfa; }
+  .start-btn {
+    width:100%; padding:14px; border:none; border-radius:50px;
+    background:linear-gradient(135deg,#a78bfa,#60a5fa);
+    color:#fff; font-size:1rem; font-weight:800;
+    letter-spacing:1px; text-transform:uppercase;
+    cursor:pointer; transition:opacity .2s, transform .15s;
+  }
+  .start-btn:hover { opacity:.88; transform:scale(1.03); }
+
+  /* ── Game Screen ── */
+  #gameScreen { display:none; flex-direction:column; align-items:center; gap:18px; padding:24px 16px; width:100%; max-width:420px; }
+
+  h1 {
+    font-size:1.8rem; font-weight:800; letter-spacing:3px;
+    background:linear-gradient(135deg,#a78bfa,#60a5fa);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    text-transform:uppercase;
+  }
+
+  /* ── Timer ── */
+  .timer-wrap { width:100%; }
+  .timer-bar-bg { width:100%; height:8px; background:#1e1e30; border-radius:99px; overflow:hidden; }
+  .timer-bar { height:100%; width:100%; background:linear-gradient(90deg,#a78bfa,#60a5fa); border-radius:99px; transition:width .9s linear, background .5s; }
+  .timer-bar.danger { background:linear-gradient(90deg,#ef4444,#f97316); }
+  .timer-label { text-align:center; font-size:.85rem; font-weight:700; margin-top:5px; letter-spacing:1px; }
+  .timer-label.danger { color:#ef4444; animation:blink .5s ease infinite alternate; }
+  @keyframes blink { from{opacity:.5} to{opacity:1} }
+
+  /* ── Scoreboard ── */
+  .scoreboard { display:flex; gap:12px; width:100%; }
+  .score-card {
+    flex:1; background:#1e1e30; border-radius:14px; padding:12px 8px;
+    text-align:center; border:2px solid transparent; transition:border-color .3s, box-shadow .3s;
+  }
+  .score-card.active-x { border-color:#a78bfa; box-shadow:0 0 16px #a78bfa44; }
+  .score-card.active-o { border-color:#60a5fa; box-shadow:0 0 16px #60a5fa44; }
+  .score-card .p-name { font-size:.65rem; letter-spacing:1px; opacity:.55; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .score-card .p-sym { font-size:1.4rem; font-weight:900; }
+  .score-card.x .p-sym { color:#a78bfa; }
+  .score-card.o .p-sym { color:#60a5fa; }
+  .score-card .p-score { font-size:1.3rem; font-weight:700; }
+  .score-draw { flex:.65; background:#1e1e30; border-radius:14px; padding:12px 8px; text-align:center; }
+  .score-draw .p-name { font-size:.65rem; letter-spacing:1px; opacity:.55; text-transform:uppercase; }
+  .score-draw .p-score { font-size:1.3rem; font-weight:700; color:#94a3b8; }
+
+  /* ── Status ── */
+  .status { font-size:1rem; font-weight:600; letter-spacing:1px; height:26px; text-align:center; }
+  .sym-x { color:#a78bfa; }
+  .sym-o { color:#60a5fa; }
+  .winner-msg { animation:pulse 1s ease-in-out infinite alternate; }
+  @keyframes pulse { from{opacity:.7;transform:scale(.98)} to{opacity:1;transform:scale(1.03)} }
+
+  /* ── Board ── */
+  .board { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%; }
+  .cell {
+    aspect-ratio:1; background:#1e1e30; border-radius:16px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:clamp(2rem,10vw,3rem); font-weight:900;
+    cursor:pointer; border:2px solid #2a2a40;
+    transition:background .2s, transform .15s, border-color .2s; user-select:none;
+  }
+  .cell:hover:not(.taken) { background:#26263e; border-color:#3a3a58; transform:scale(1.04); }
+  .cell.taken { cursor:default; }
+  .cell.x { color:#a78bfa; }
+  .cell.o { color:#60a5fa; }
+  .cell.pop { animation:popIn .22s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes popIn { from{transform:scale(.4);opacity:0} to{transform:scale(1);opacity:1} }
+  .cell.undo-out { animation:undoOut .3s ease forwards; }
+  @keyframes undoOut { to{transform:scale(.2);opacity:0} }
+  .cell.win { background:#2e1f4e; border-color:#a78bfa; box-shadow:0 0 20px #a78bfa66; animation:winPulse .5s ease forwards; }
+  .cell.win.o { background:#1a2a4e; border-color:#60a5fa; box-shadow:0 0 20px #60a5fa66; }
+  @keyframes winPulse { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1.05)} }
+
+  /* ── Buttons ── */
+  .bottom-btns { display:flex; gap:10px; }
+  .btn { padding:11px 24px; border:none; border-radius:50px; font-size:.9rem; font-weight:700; letter-spacing:1px; cursor:pointer; transition:opacity .2s, transform .15s; text-transform:uppercase; }
+  .btn-restart { background:linear-gradient(135deg,#a78bfa,#60a5fa); color:#fff; }
+  .btn-menu    { background:#1e1e30; color:#94a3b8; border:2px solid #2a2a40; }
+  .btn:hover   { opacity:.85; transform:scale(1.04); }
+  .btn:active  { transform:scale(.97); }
+
+  .sound-btn {
+    position:fixed; top:14px; right:14px; background:#1e1e30;
+    border:2px solid #2a2a40; color:#fff; border-radius:50%;
+    width:36px; height:36px; font-size:1rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:border-color .2s;
+  }
+  .sound-btn:hover { border-color:#a78bfa; }
+
+  /* ── Toast ── */
+  .toast {
+    position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(60px);
+    background:#2e1f4e; border:2px solid #a78bfa; color:#fff;
+    padding:10px 22px; border-radius:50px; font-size:.9rem; font-weight:600;
+    letter-spacing:1px; opacity:0; transition:all .4s ease;
+    white-space:nowrap; pointer-events:none;
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .online-badge { font-size:.7rem; letter-spacing:1.5px; text-transform:uppercase; background:#1e1e30; border:1.5px solid #2a2a40; border-radius:99px; padding:4px 12px; color:#94a3b8; }
+  .online-badge .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; background:#4ade80; animation:dotPulse 1.5s ease infinite; }
+  @keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+</head>
+<body>
+
+<button class="sound-btn" id="soundBtn">🔊</button>
+<div class="toast" id="toast"></div>
+
+<!-- ── SETUP ── -->
+<div id="setupScreen">
+  <h1>Tic Tac Toe</h1>
+  <div style="width:100%">
+    <div class="setup-label">Mode</div>
+    <div class="mode-btns" style="margin-top:8px">
+      <button class="mode-btn active" id="modeLocal">🖥 Local</button>
+      <button class="mode-btn" id="modeOnline">🌐 Online</button>
+    </div>
+  </div>
+  <div style="width:100%" id="nameFields">
+    <div class="setup-label">Player X Name</div>
+    <input class="setup-input" id="nameX" placeholder="e.g. Alice" maxlength="14" style="margin-top:6px">
+    <div class="setup-label" style="margin-top:12px" id="nameOLabel">Player O Name</div>
+    <input class="setup-input" id="nameO" placeholder="e.g. Bob" maxlength="14" style="margin-top:6px">
+  </div>
+  <div style="width:100%;display:none" id="roomField">
+    <div class="setup-label">Room Code (share with friend)</div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <input class="setup-input" id="roomCode" placeholder="e.g. GAME42" maxlength="8" style="text-transform:uppercase;letter-spacing:3px">
+      <button class="mode-btn" id="genRoom" style="flex:0 0 auto;padding:0 14px">🎲</button>
+    </div>
+  </div>
+  <button class="start-btn" id="startBtn">Start Game</button>
+</div>
+
+<!-- ── GAME ── -->
+<div id="gameScreen">
+  <h1>Tic Tac Toe</h1>
+  <div class="online-badge" id="onlineBadge" style="display:none"><span class="dot"></span>Online – Room: <span id="roomDisplay"></span></div>
+  <div class="timer-wrap">
+    <div class="timer-bar-bg"><div class="timer-bar" id="timerBar"></div></div>
+    <div class="timer-label" id="timerLabel">45s</div>
+  </div>
+  <div class="scoreboard">
+    <div class="score-card x active-x" id="cardX">
+      <div class="p-name" id="labelX">Player X</div>
+      <div class="p-sym">X</div>
+      <div class="p-score" id="scoreX">0</div>
+    </div>
+    <div class="score-draw">
+      <div class="p-name">Draw</div>
+      <div class="p-score" id="scoreDraw">0</div>
+    </div>
+    <div class="score-card o" id="cardO">
+      <div class="p-name" id="labelO">Player O</div>
+      <div class="p-sym">O</div>
+      <div class="p-score" id="scoreO">0</div>
+    </div>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="board" id="board"></div>
+  <div class="bottom-btns">
+    <button class="btn btn-restart" id="restartBtn">Restart</button>
+    <button class="btn btn-menu" id="menuBtn">Menu</button>
+  </div>
+</div>
+
+<script>
+const TIMER_MAX = 45;
+const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+let g = {};
+let timerInterval = null;
+let soundOn = true;
+let gameMode = 'local';
+let mySymbol = null;
+let channel  = null;
+
+/* Audio */
+const actx = new (window.AudioContext || window.webkitAudioContext)();
+function tone(freq, type='sine', dur=0.12, vol=0.22) {
+  if (!soundOn) return;
+  if (actx.state === 'suspended') actx.resume();
+  const o = actx.createOscillator(), gn = actx.createGain();
+  o.connect(gn); gn.connect(actx.destination);
+  o.type = type; o.frequency.setValueAtTime(freq, actx.currentTime);
+  gn.gain.setValueAtTime(vol, actx.currentTime);
+  gn.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+  o.start(); o.stop(actx.currentTime + dur);
+}
+const sfx = {
+  move:    () => tone(440,'sine',.1),
+  win:     () => { tone(523,'triangle',.15); setTimeout(()=>tone(659,'triangle',.2),150); setTimeout(()=>tone(784,'triangle',.3),300); },
+  draw:    () => { tone(330,'sawtooth',.15,.15); setTimeout(()=>tone(300,'sawtooth',.2,.1),160); },
+  tick:    () => tone(220,'sine',.05,.08),
+  undo:    () => { tone(350,'sawtooth',.1,.12); setTimeout(()=>tone(280,'sawtooth',.12,.1),110); },
+  timeout: () => { tone(200,'sawtooth',.2,.2); setTimeout(()=>tone(160,'sawtooth',.25,.15),200); }
+};
+
+/* DOM */
+const setupScreen = document.getElementById('setupScreen');
+const gameScreen  = document.getElementById('gameScreen');
+const boardEl     = document.getElementById('board');
+const statusEl    = document.getElementById('status');
+const timerBar    = document.getElementById('timerBar');
+const timerLabel  = document.getElementById('timerLabel');
+const scoreXEl    = document.getElementById('scoreX');
+const scoreOEl    = document.getElementById('scoreO');
+const scoreDrawEl = document.getElementById('scoreDraw');
+const cardX       = document.getElementById('cardX');
+const cardO       = document.getElementById('cardO');
+const labelX      = document.getElementById('labelX');
+const labelO      = document.getElementById('labelO');
+const onlineBadge = document.getElementById('onlineBadge');
+const roomDisplay = document.getElementById('roomDisplay');
+const toastEl     = document.getElementById('toast');
+
+/* Setup */
+document.getElementById('modeLocal').addEventListener('click', () => {
+  gameMode = 'local';
+  document.getElementById('modeLocal').classList.add('active');
+  document.getElementById('modeOnline').classList.remove('active');
+  document.getElementById('nameOLabel').textContent = 'Player O Name';
+  document.getElementById('nameO').placeholder = 'e.g. Bob';
+  document.getElementById('roomField').style.display = 'none';
+});
+document.getElementById('modeOnline').addEventListener('click', () => {
+  gameMode = 'online';
+  document.getElementById('modeOnline').classList.add('active');
+  document.getElementById('modeLocal').classList.remove('active');
+  document.getElementById('nameOLabel').textContent = 'Your Name (you are O)';
+  document.getElementById('nameO').placeholder = 'e.g. Bob';
+  document.getElementById('roomField').style.display = 'block';
+});
+document.getElementById('genRoom').addEventListener('click', () => {
+  document.getElementById('roomCode').value = Math.random().toString(36).slice(2,7).toUpperCase();
+});
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', () => restart());
+document.getElementById('menuBtn').addEventListener('click', goMenu);
+document.getElementById('soundBtn').addEventListener('click', () => {
+  soundOn = !soundOn;
+  document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+});
+
+/* Online */
+function setupChannel(room) {
+  if (channel) channel.close();
+  channel = new BroadcastChannel('ttt_' + room);
+  channel.onmessage = e => {
+    const { type, data } = e.data;
+    if (type === 'move')    handleRemoteMove(data.index);
+    if (type === 'restart') restart(true);
+    if (type === 'hello')   channel.postMessage({ type:'ack' });
+    if (type === 'ack')     showToast('Opponent connected!');
+  };
+}
+function broadcastMove(i)  { if (channel) channel.postMessage({ type:'move', data:{ index:i } }); }
+function broadcastRestart(){ if (channel) channel.postMessage({ type:'restart' }); }
+function handleRemoteMove(i) { if (!g.gameOver && !g.board[i]) applyMove(i); }
+
+/* Start */
+function startGame() {
+  const nx = document.getElementById('nameX').value.trim() || 'Player X';
+  const no = document.getElementById('nameO').value.trim() || 'Player O';
+  if (gameMode === 'online') {
+    const room = document.getElementById('roomCode').value.trim().toUpperCase();
+    if (!room) { showToast('Enter a room code!'); return; }
+    mySymbol = 'O';
+    setupChannel(room);
+    roomDisplay.textContent = room;
+    onlineBadge.style.display = 'flex';
+    channel.postMessage({ type:'hello' });
+    showToast('Waiting for opponent…');
+  } else {
+    mySymbol = null;
+    if (channel) { channel.close(); channel = null; }
+    onlineBadge.style.display = 'none';
+  }
+  g = { board:Array(9).fill(''), current:'X', gameOver:false, scores:{X:0,O:0,draw:0}, names:{X:nx,O:no}, history:[], timeLeft:TIMER_MAX };
+  labelX.textContent = nx; labelO.textContent = no;
+  setupScreen.style.display = 'none';
+  gameScreen.style.display  = 'flex';
+  buildBoard(); render(); turnStatus(); startTimer();
+}
+
+/* Timer */
+function startTimer() {
+  clearInterval(timerInterval);
+  g.timeLeft = TIMER_MAX; updateTimerUI();
+  timerInterval = setInterval(() => {
+    g.timeLeft--;
+    if (g.timeLeft <= 10) sfx.tick();
+    updateTimerUI();
+    if (g.timeLeft <= 0) onTimeout();
+  }, 1000);
+}
+function stopTimer()  { clearInterval(timerInterval); }
+function resetTimer() { stopTimer(); if (!g.gameOver) startTimer(); }
+function updateTimerUI() {
+  timerBar.style.width = (g.timeLeft / TIMER_MAX * 100) + '%';
+  timerLabel.textContent = g.timeLeft + 's';
+  const d = g.timeLeft <= 10;
+  timerBar.classList.toggle('danger', d);
+  timerLabel.classList.toggle('danger', d);
+}
+function onTimeout() {
+  stopTimer(); g.gameOver = true;
+  const winner = g.current === 'X' ? 'O' : 'X';
+  g.scores[winner]++; render();
+  const cls = winner === 'X' ? 'sym-x' : 'sym-o';
+  statusEl.innerHTML = `<span class="winner-msg ${cls}">${g.names[winner]} wins (timeout)! ⏰</span>`;
+  sfx.timeout();
+}
+
+/* Board */
+function buildBoard() {
+  boardEl.innerHTML = '';
+  for (let i = 0; i < 9; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell'; cell.dataset.i = i;
+    cell.addEventListener('click', onCellClick);
+    boardEl.appendChild(cell);
+  }
+}
+
+/* Move */
+function onCellClick(e) {
+  const i = +e.currentTarget.dataset.i;
+  if (actx.state === 'suspended') actx.resume();
+  if (gameMode === 'online' && g.current !== mySymbol) { showToast("It's not your turn!"); return; }
+  if (g.gameOver || g.board[i]) return;
+  if (gameMode === 'online') broadcastMove(i);
+  applyMove(i);
+}
+function applyMove(i) {
+  g.board[i] = g.current;
+  g.history.push({ index:i, sym:g.current });
+  const cells = boardEl.querySelectorAll('.cell');
+  cells[i].classList.add('pop');
+  cells[i].addEventListener('animationend', () => cells[i].classList.remove('pop'), { once:true });
+  sfx.move();
+  const result = checkWinner(g.board);
+  if (result) {
+    g.gameOver = true; stopTimer();
+    if (result.draw) {
+      g.scores.draw++; render();
+      statusEl.innerHTML = `<span style="color:#94a3b8">Draw! ↩ Undoing last 2 moves…</span>`;
+      sfx.draw();
+      setTimeout(undoLastTwo, 900);
+    } else {
+      g.scores[result.winner]++; render(result.line);
+      const cls = result.winner === 'X' ? 'sym-x' : 'sym-o';
+      statusEl.innerHTML = `<span class="winner-msg ${cls}">${g.names[result.winner]} Wins! 🎉</span>`;
+      sfx.win();
+    }
+  } else {
+    g.current = g.current === 'X' ? 'O' : 'X';
+    render(); turnStatus(); resetTimer();
+  }
+}
+
+/* Undo */
+function undoLastTwo() {
+  if (g.history.length < 2) { resumeAfterDraw(); return; }
+  const cells = boardEl.querySelectorAll('.cell');
+  const last2 = g.history.splice(-2);
+  let done = 0;
+  last2.forEach(({ index }) => {
+    const cell = cells[index];
+    cell.classList.add('undo-out');
+    cell.addEventListener('animationend', () => {
+      g.board[index] = '';
+      cell.classList.remove('undo-out');
+      if (++done === 2) resumeAfterDraw();
+    }, { once:true });
+  });
+  sfx.undo();
+}
+function resumeAfterDraw() {
+  g.gameOver = false; render(); turnStatus(); startTimer();
+  showToast('Board rewound — keep playing!');
+}
+
+/* Win check */
+function checkWinner(board) {
+  for (const line of WIN_LINES) {
+    const [a,b,c] = line;
+    if (board[a] && board[a] === board[b] && board[a] === board[c])
+      return { winner:board[a], line };
+  }
+  if (board.every(v => v)) return { winner:null, line:null, draw:true };
+  return null;
+}
+
+/* Render */
+function render(winLine = null) {
+  const cells = boardEl.querySelectorAll('.cell');
+  cells.forEach((cell, i) => {
+    const val = g.board[i];
+    cell.className = 'cell' + (val ? ` taken ${val.toLowerCase()}` : '');
+    cell.textContent = val;
+    if (winLine && winLine.includes(i)) {
+      cell.classList.add('win');
+      if (g.current === 'O') cell.classList.add('o');
+    }
+  });
+  cardX.className = `score-card x${(!g.gameOver && g.current==='X') ? ' active-x' : ''}`;
+  cardO.className = `score-card o${(!g.gameOver && g.current==='O') ? ' active-o' : ''}`;
+  scoreXEl.textContent    = g.scores.X;
+  scoreOEl.textContent    = g.scores.O;
+  scoreDrawEl.textContent = g.scores.draw;
+}
+function turnStatus() {
+  const cls = g.current === 'X' ? 'sym-x' : 'sym-o';
+  statusEl.innerHTML = `<span class="${cls}">${g.names[g.current]}</span>'s turn`;
+}
+
+/* Restart / Menu */
+function restart(fromRemote = false) {
+  stopTimer();
+  g.board = Array(9).fill(''); g.current = 'X'; g.gameOver = false; g.history = [];
+  buildBoard(); render(); turnStatus(); startTimer();
+  if (!fromRemote && gameMode === 'online') broadcastRestart();
+}
+function goMenu() {
+  stopTimer();
+  if (channel) { channel.close(); channel = null; }
+  gameScreen.style.display = 'none';
+  setupScreen.style.display = 'flex';
+}
+
+/* Toast */
+let toastTimer;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
