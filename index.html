@@ -12,7 +12,7 @@
     background: #0f0f1a; font-family: 'Segoe UI', system-ui, sans-serif; color: #fff;
   }
 
-  /* ── Setup ── */
+  /* Setup */
   #setupScreen {
     display: flex; flex-direction: column; align-items: center; gap: 20px;
     padding: 36px 28px; background: #1e1e30; border-radius: 24px;
@@ -55,7 +55,7 @@
   .start-btn:hover { opacity:.88; transform:scale(1.03); }
   .setup-note { font-size:.75rem; color:#4a4a6a; text-align:center; line-height:1.5; }
 
-  /* ── Waiting ── */
+  /* Waiting */
   #waitingScreen {
     display:none; flex-direction:column; align-items:center; gap:20px;
     padding:40px 28px; background:#1e1e30; border-radius:24px;
@@ -80,7 +80,7 @@
   .copy-btn:hover { border-color:#a78bfa; }
   .cancel-btn { padding:8px 20px; background:none; border:none; color:#4a4a6a; font-size:.8rem; cursor:pointer; text-decoration:underline; }
 
-  /* ── Game ── */
+  /* Game */
   #gameScreen { display:none; flex-direction:column; align-items:center; gap:16px; padding:24px 16px; width:100%; max-width:420px; }
   h1 {
     font-size:1.8rem; font-weight:800; letter-spacing:3px;
@@ -95,7 +95,6 @@
   .online-pill .dot { width:7px; height:7px; border-radius:50%; background:#4ade80; animation:dotPulse 1.5s ease infinite; }
   @keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  /* Timer */
   .timer-wrap { width:100%; }
   .timer-bar-bg { width:100%; height:8px; background:#1e1e30; border-radius:99px; overflow:hidden; }
   .timer-bar { height:100%; width:100%; background:linear-gradient(90deg,#a78bfa,#60a5fa); border-radius:99px; transition:width .9s linear, background .5s; }
@@ -104,7 +103,6 @@
   .timer-label.danger { color:#ef4444; animation:blink .5s ease infinite alternate; }
   @keyframes blink { from{opacity:.5} to{opacity:1} }
 
-  /* Scoreboard */
   .scoreboard { display:flex; gap:10px; width:100%; }
   .score-card {
     flex:1; background:#1e1e30; border-radius:14px; padding:12px 8px;
@@ -120,13 +118,11 @@
   .score-draw .p-name { font-size:.6rem; letter-spacing:1px; opacity:.55; text-transform:uppercase; }
   .score-draw .p-score { font-size:1.3rem; font-weight:700; color:#94a3b8; }
 
-  /* Status */
   .status { font-size:1rem; font-weight:600; letter-spacing:1px; height:26px; text-align:center; }
   .sym-x { color:#a78bfa; } .sym-o { color:#60a5fa; }
   .winner-msg { animation:pulse 1s ease-in-out infinite alternate; }
   @keyframes pulse { from{opacity:.7;transform:scale(.98)} to{opacity:1;transform:scale(1.03)} }
 
-  /* Board */
   .board { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%; }
   .cell {
     aspect-ratio:1; background:#1e1e30; border-radius:16px;
@@ -146,7 +142,6 @@
   .cell.win.o { background:#1a2a4e; border-color:#60a5fa; box-shadow:0 0 20px #60a5fa66; }
   @keyframes winPulse { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1.05)} }
 
-  /* Buttons */
   .bottom-btns { display:flex; gap:10px; }
   .btn { padding:11px 24px; border:none; border-radius:50px; font-size:.9rem; font-weight:700; letter-spacing:1px; cursor:pointer; transition:opacity .2s, transform .15s; text-transform:uppercase; }
   .btn-restart { background:linear-gradient(135deg,#a78bfa,#60a5fa); color:#fff; }
@@ -161,7 +156,6 @@
   }
   .sound-btn:hover { border-color:#a78bfa; }
 
-  /* Toast */
   .toast {
     position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(60px);
     background:#2e1f4e; border:2px solid #a78bfa; color:#fff;
@@ -195,7 +189,7 @@
     padding:12px 32px; border:none; border-radius:50px;
     background:linear-gradient(135deg,#a78bfa,#60a5fa);
     color:#fff; font-size:.95rem; font-weight:800; cursor:pointer;
-    letter-spacing:1px; text-transform:uppercase; transition:opacity .2s;
+    letter-spacing:1px; text-transform:uppercase;
   }
   .reveal-btn:hover { opacity:.85; }
 </style>
@@ -228,12 +222,10 @@
 <!-- Setup -->
 <div id="setupScreen">
   <h1>Tic Tac Toe</h1>
-
   <div style="width:100%">
     <div class="setup-label">Your Name</div>
     <input class="setup-input" id="myName" placeholder="e.g. Alice" maxlength="14">
   </div>
-
   <div style="width:100%">
     <div class="setup-label">Mode</div>
     <div class="mode-btns" style="margin-top:8px">
@@ -241,24 +233,19 @@
       <button class="mode-btn" id="modeOnline">🌐 Online</button>
     </div>
   </div>
-
-  <!-- Local: second player name -->
   <div style="width:100%" id="localFields">
     <div class="setup-label">Player 2 Name</div>
     <input class="setup-input" id="name2" placeholder="e.g. Bob" maxlength="14">
     <div class="setup-note" style="margin-top:10px">🎲 X and O are randomly assigned at the start</div>
   </div>
-
-  <!-- Online: just room code -->
   <div style="width:100%;display:none" id="onlineFields">
     <div class="setup-label">Room Code</div>
     <div class="room-row">
       <input class="setup-input" id="roomCode" placeholder="e.g. TIGER" maxlength="8" style="text-transform:uppercase;letter-spacing:3px">
       <button class="dice-btn" id="genRoom">🎲</button>
     </div>
-    <div class="setup-note" style="margin-top:10px">Create a code or enter your friend's code to join. Each player only enters their own name.</div>
+    <div class="setup-note" style="margin-top:10px">Create a code or enter your friend's code to join.</div>
   </div>
-
   <button class="start-btn" id="startBtn">Start Game</button>
 </div>
 
@@ -267,7 +254,7 @@
   <div class="waiting-spinner"></div>
   <div class="waiting-title">Waiting for opponent…</div>
   <div class="waiting-code" id="waitingCode"></div>
-  <div class="waiting-hint">Share this code with your friend.<br>They open the game, enter their <strong>own name</strong> + this code, and join.</div>
+  <div class="waiting-hint">Share this code with your friend.<br>They enter their own name + this code and join.</div>
   <button class="copy-btn" id="copyCodeBtn">📋 Copy Code</button>
   <button class="cancel-btn" id="cancelWaitBtn">Cancel</button>
 </div>
@@ -313,8 +300,7 @@ const TIMER_MAX = 45;
 const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
 let g = {}, timerInterval = null, soundOn = true;
-let gameMode = 'local';
-let mySymbol = null;
+let gameMode = 'local', mySymbol = null;
 let ablyClient = null, ablyChannel = null;
 
 /* ── Audio ── */
@@ -382,7 +368,7 @@ document.getElementById('startBtn').addEventListener('click', () => {
   gameMode === 'local' ? startLocal() : startOnline();
 });
 
-/* ── Local ── */
+/* ── Local mode ── */
 function startLocal() {
   const n1 = document.getElementById('myName').value.trim() || 'Player 1';
   const n2 = document.getElementById('name2').value.trim() || 'Player 2';
@@ -390,7 +376,7 @@ function startLocal() {
   launchGame({ X: xFirst ? n1 : n2, O: xFirst ? n2 : n1 }, false);
 }
 
-/* ── Online ── */
+/* ── Online mode — pure pub/sub, zero presence ── */
 function startOnline() {
   if (ABLY_KEY === 'YOUR_ABLY_API_KEY_HERE') { showToast('Paste your Ably API key in the code!'); return; }
   const myName = document.getElementById('myName').value.trim() || 'Player';
@@ -401,16 +387,39 @@ function startOnline() {
   document.getElementById('waitingCode').textContent = room;
   document.getElementById('pillRoom').textContent = room;
 
-  if (ablyClient) ablyClient.close();
+  if (ablyClient) { ablyClient.close(); ablyClient = null; ablyChannel = null; }
+
+  // Unique ID for this session — used to avoid acting on our own messages
+  const myId = Math.random().toString(36).slice(2, 9);
+  let iAmHost = false;
+
   ablyClient  = new Ably.Realtime({ key: ABLY_KEY });
   ablyChannel = ablyClient.channels.get('ttt-' + room);
 
-  // Listen for game start (host publishes names after both players connect)
+  /* Subscribe to all messages BEFORE announcing ourselves */
+  ablyChannel.subscribe('host-announce', msg => {
+    if (msg.data.id === myId) return;            // ignore our own broadcast
+    iAmHost  = false;
+    mySymbol = 'O';
+    ablyChannel.publish('joiner-announce', { name: myName, id: myId });
+  });
+
+  ablyChannel.subscribe('joiner-announce', msg => {
+    if (!iAmHost || msg.data.id === myId) return;
+    const xFirst = Math.random() < .5;
+    ablyChannel.publish('start', {
+      names: {
+        X: xFirst ? myName       : msg.data.name,
+        O: xFirst ? msg.data.name : myName
+      },
+      hostId: myId
+    });
+  });
+
   ablyChannel.subscribe('start', msg => {
-    const { names, hostId } = msg.data;
-    mySymbol = (ablyClient.auth.clientId === hostId) ? 'X' : 'O';
+    mySymbol = (msg.data.hostId === myId) ? 'X' : 'O';
     onlinePill.style.display = 'flex';
-    launchGame(names, true);
+    launchGame(msg.data.names, true);
   });
 
   ablyChannel.subscribe('move', msg => {
@@ -419,38 +428,30 @@ function startOnline() {
 
   ablyChannel.subscribe('restart', () => doRestart(false));
 
-  // Presence: detect when 2 players are in room
-  // Check presence both on 'enter' events AND immediately after joining
-  // This fixes the race condition where one player misses the other's enter event
-  function checkPresence() {
-    ablyChannel.presence.get((err, members) => {
-      if (err || !members || members.length !== 2) return;
-      const sorted = members.sort((a, b) => a.timestamp - b.timestamp);
-      const amHost = sorted[0].clientId === ablyClient.auth.clientId;
-      if (amHost) {
-        const xFirst = Math.random() < .5;
-        const names = {
-          X: xFirst ? sorted[0].data : sorted[1].data,
-          O: xFirst ? sorted[1].data : sorted[0].data
-        };
-        ablyChannel.publish('start', { names, hostId: sorted[0].clientId });
-      }
-    });
-  }
-
-  ablyChannel.presence.subscribe('enter', checkPresence);
-  ablyChannel.presence.subscribe('leave', () => {
-    if (g.gameOver !== undefined) showToast('Opponent disconnected!');
+  /* Attach channel, then announce as host */
+  ablyChannel.attach(err => {
+    if (err) { showToast('Connection failed — check your API key.'); show('setup'); return; }
+    iAmHost = true;
+    ablyChannel.publish('host-announce', { name: myName, id: myId });
   });
-
-  // Enter presence, then immediately check if opponent is already there
-  ablyChannel.presence.enter(myName, () => checkPresence());
 }
 
 function onRemoteMove(i) {
   if (g.gameOver || g.board[i]) return;
   applyMove(i);
 }
+
+/* ── Cancel / disconnect ── */
+document.getElementById('cancelWaitBtn').addEventListener('click', disconnectAbly);
+function disconnectAbly() {
+  if (ablyClient) { ablyClient.close(); ablyClient = null; ablyChannel = null; }
+  show('setup');
+}
+
+document.getElementById('copyCodeBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(document.getElementById('waitingCode').textContent)
+    .then(() => showToast('Code copied!'));
+});
 
 /* ── Launch game ── */
 function launchGame(names, isOnline) {
@@ -611,16 +612,13 @@ document.getElementById('restartBtn').addEventListener('click', () => {
   if (g.isOnline) ablyChannel.publish('restart', {});
   doRestart(true);
 });
-
 function doRestart(reshuffleLocal) {
   stopTimer();
   if (!g.isOnline && reshuffleLocal) {
-    // Re-randomise symbols for local mode
     const {X, O} = g.names;
     const swap = Math.random() < .5;
     g.names = swap ? {X:O, O:X} : {X, O};
-    labelX.textContent = g.names.X;
-    labelO.textContent = g.names.O;
+    labelX.textContent = g.names.X; labelO.textContent = g.names.O;
     document.getElementById('revealNameX').textContent = g.names.X;
     document.getElementById('revealNameO').textContent = g.names.O;
     document.getElementById('revealFirst').textContent = g.names.X;
@@ -634,24 +632,12 @@ function doRestart(reshuffleLocal) {
 /* ── Menu ── */
 document.getElementById('menuBtn').addEventListener('click', () => {
   stopTimer();
-  if (ablyChannel) ablyChannel.presence.leave();
-  if (ablyClient)  ablyClient.close();
+  if (ablyClient) { ablyClient.close(); ablyClient = null; ablyChannel = null; }
   onlinePill.style.display = 'none';
   show('setup');
 });
 
-/* ── Cancel waiting ── */
-document.getElementById('cancelWaitBtn').addEventListener('click', () => {
-  if (ablyChannel) ablyChannel.presence.leave();
-  if (ablyClient)  ablyClient.close();
-  show('setup');
-});
-
-document.getElementById('copyCodeBtn').addEventListener('click', () => {
-  navigator.clipboard.writeText(document.getElementById('waitingCode').textContent)
-    .then(() => showToast('Code copied!'));
-});
-
+/* ── Sound ── */
 document.getElementById('soundBtn').addEventListener('click', () => {
   soundOn = !soundOn;
   document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇';
